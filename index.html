@@ -15,32 +15,43 @@ html,body{height:100%;background:#000;color:#e8ffe8;font-family:system-ui,Segoe 
 #osd.on{opacity:1}
 #osdn{display:block;font:700 clamp(40px,8vw,96px)/1 ui-monospace,Consolas,monospace;color:#5dff7a}
 #osdc{display:block;font-size:clamp(16px,2.4vw,28px);font-weight:600}
+#osdk{display:block;font-size:clamp(12px,1.6vw,18px);color:#5dff7a;letter-spacing:.08em;text-transform:uppercase}
 #osdt{display:block;font-size:clamp(12px,1.5vw,18px);opacity:.8;max-width:50vw;margin-left:auto}
 #bar{position:fixed;left:0;right:0;bottom:0;z-index:9;display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.85));transition:opacity .3s,transform .3s}
 #bar.hide{opacity:0;transform:translateY(20px);pointer-events:none}
-button{background:#1b2a1f;color:#e8ffe8;border:1px solid #2f4a36;border-radius:8px;padding:9px 14px;font-size:15px;cursor:pointer}
+button,select{background:#1b2a1f;color:#e8ffe8;border:1px solid #2f4a36;border-radius:8px;padding:9px 14px;font-size:15px;cursor:pointer}
 button:hover{background:#27402e}
 button.pri{background:#2e7d45;border-color:#3fae5f}
+button.sm{padding:6px 10px;font-size:13px}
 input[type=range]{accent-color:#5dff7a;width:90px}
-#guide{position:fixed;top:0;left:0;bottom:0;width:min(360px,90vw);z-index:10;background:rgba(8,16,10,.96);border-right:1px solid #2f4a36;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column}
+#guide{position:fixed;top:0;left:0;bottom:0;width:min(380px,92vw);z-index:10;background:rgba(8,16,10,.96);border-right:1px solid #2f4a36;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column}
 #guide.on{transform:none}
 #guide h2{padding:16px;font-size:18px;border-bottom:1px solid #2f4a36;display:flex;justify-content:space-between;align-items:center}
+#chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid #14221a}
+.chip{padding:5px 11px;border-radius:99px;font-size:13px;background:#14221a;border:1px solid #2f4a36;cursor:pointer}
+.chip.on{background:#2e7d45;border-color:#3fae5f}
 #list{overflow:auto;flex:1}
 .ch{display:flex;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid #14221a;align-items:center}
 .ch:hover{background:#17281c}
 .ch.cur{background:#1f3a27}
 .ch b{font:700 18px ui-monospace,Consolas,monospace;color:#5dff7a;min-width:34px}
-.ch span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ch i{font-style:normal;font-size:11px;opacity:.65;text-transform:uppercase;letter-spacing:.05em}
 #editor{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px}
 #editor.on{display:flex}
-.box{background:#0d1810;border:1px solid #2f4a36;border-radius:12px;padding:20px;width:min(720px,100%);max-height:94vh;overflow:auto}
-.box h2{margin-bottom:8px}
+.box{background:#0d1810;border:1px solid #2f4a36;border-radius:12px;padding:20px;width:min(760px,100%);max-height:94vh;overflow:auto}
+.box h2{margin-bottom:10px}
+.box h3{margin:18px 0 8px;font-size:14px;opacity:.85}
 .box p{font-size:13px;opacity:.75;margin-bottom:10px;line-height:1.45}
-textarea,input[type=text],input[type=password]{width:100%;background:#07100a;color:#e8ffe8;border:1px solid #2f4a36;border-radius:8px;padding:10px;font:14px ui-monospace,Consolas,monospace}
-textarea{height:240px;resize:vertical}
-.row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+input[type=text],input[type=password]{width:100%;background:#07100a;color:#e8ffe8;border:1px solid #2f4a36;border-radius:8px;padding:9px;font:14px system-ui,Segoe UI,Roboto,sans-serif}
+.add{display:grid;grid-template-columns:1fr 1.6fr 1fr auto;gap:8px;align-items:center}
+@media(max-width:640px){.add{grid-template-columns:1fr}}
+.erow{display:grid;grid-template-columns:30px 1fr 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #14221a}
+.erow b{font:700 14px ui-monospace,Consolas,monospace;color:#5dff7a}
+.erow .u{grid-column:2/5;font-size:11px;opacity:.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:-4px}
+.row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 label{display:block;margin-top:12px;font-size:13px;opacity:.85}
-#status{font-size:13px;margin-top:10px;min-height:18px;color:#ffd06a;white-space:pre-line}
+#status{font-size:13px;margin-top:8px;min-height:18px;color:#ffd06a;white-space:pre-line}
 #power{position:fixed;inset:0;z-index:30;background:#050805;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;cursor:pointer}
 #power h1{font:700 clamp(40px,9vw,90px) ui-monospace,Consolas,monospace;color:#5dff7a;letter-spacing:.1em}
 #power p{opacity:.7}
@@ -51,10 +62,11 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 <div id="stage"><div id="yt"></div></div>
 <div id="tap"></div>
 <canvas id="noise"></canvas>
-<div id="osd"><span id="osdn"></span><span id="osdc"></span><span id="osdt"></span></div>
+<div id="osd"><span id="osdn"></span><span id="osdc"></span><span id="osdk"></span><span id="osdt"></span></div>
 
 <div id="bar">
   <button id="bGuide" title="Guía (G)">☰ Guía</button>
+  <select id="catSel" title="Categoría (C)"></select>
   <button id="bPrev" title="Canal anterior (↓)">◀ CH</button>
   <button id="bNext" title="Canal siguiente (↑)">CH ▶</button>
   <button id="bRand" class="pri" title="Canal al azar (R)">🎲 Zap</button>
@@ -69,43 +81,74 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 
 <aside id="guide">
   <h2>Guía de canales <button id="gClose">✕</button></h2>
+  <div id="chips"></div>
   <div id="list"></div>
 </aside>
 
 <div id="editor"><div class="box">
-  <h2>Tus canales</h2>
-  <p>Un canal por línea, formato <code>Nombre | fuente</code> (el nombre es opcional). Fuente: <code>@handle</code>, URL de canal (<code>/channel/UC…</code> o <code>/@handle</code>), ID <code>UC…</code>, URL/ID de lista de reproducción (<code>list=PL…</code>) o URL de un video suelto.</p>
-  <textarea id="txt" spellcheck="false" placeholder="NASA | https://www.youtube.com/channel/UCLA_DiR1FfKNvjuUpBHmylQ&#10;Kurzgesagt | @kurzgesagt&#10;Mis tutoriales | https://www.youtube.com/playlist?list=PL..."></textarea>
-  <label>API key de YouTube Data v3 (opcional, gratuita; mejora la resolución de @handles)
+  <h2>Canales</h2>
+  <h3>➕ Nuevo canal</h3>
+  <div class="add">
+    <input type="text" id="nName" placeholder="Nombre (opcional)">
+    <input type="text" id="nUrl" placeholder="URL, ej: https://www.youtube.com/outdoorboys">
+    <input type="text" id="nCat" list="cats" placeholder="Categoría">
+    <button class="pri" id="nAdd">Agregar</button>
+  </div>
+  <datalist id="cats"></datalist>
+  <p style="margin-top:8px">Acepta: <code>youtube.com/nombre</code>, <code>/@handle</code>, <code>/c/nombre</code>, <code>/user/nombre</code>, <code>/channel/UC…</code>, ID <code>UC…</code>, listas (<code>list=PL…</code>) y videos sueltos.</p>
+  <div id="status"></div>
+
+  <h3>Tus canales</h3>
+  <div id="elist"></div>
+
+  <label>API key de YouTube Data v3 (opcional, gratuita; mejora la resolución de nombres de canal)
     <input type="password" id="apikey" placeholder="AIza...">
   </label>
-  <div id="status"></div>
   <div class="row">
-    <button class="pri" id="eSave">Guardar</button>
-    <button id="eCancel">Cancelar</button>
+    <button class="pri" id="eClose">Listo</button>
     <button id="eExport">Exportar</button>
     <button id="eImport">Importar</button>
     <input type="file" id="file" accept="application/json" hidden>
   </div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · G guía</p></div>
+<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · G guía</p></div>
 <div id="toast"></div>
 
 <script>
 const $=s=>document.querySelector(s);
 const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-
+const PRESET_CATS=['Deportes','Historia','Curiosidades','Ciencia','Documentales','Música','Noticias','Cocina','Viajes','Humor','Educación','Tecnología','Naturaleza','Cine','General'];
 const DEFAULTS=[
- {name:'NASA',src:'UCLA_DiR1FfKNvjuUpBHmylQ',list:'UULA_DiR1FfKNvjuUpBHmylQ'},
- {name:'Kurzgesagt',src:'UCsXVk37bltHxD1rDPwtNM8Q',list:'UUsXVk37bltHxD1rDPwtNM8Q'},
- {name:'TED',src:'UCAuUUnT6oDeKwE6v1NGQxug',list:'UUAuUUnT6oDeKwE6v1NGQxug'},
- {name:'Veritasium',src:'UCHnyfMqiRRG1u-2MsSQLbXA',list:'UUHnyfMqiRRG1u-2MsSQLbXA'}
+ {name:'NASA',src:'UCLA_DiR1FfKNvjuUpBHmylQ',list:'UULA_DiR1FfKNvjuUpBHmylQ',cat:'Ciencia'},
+ {name:'Kurzgesagt',src:'UCsXVk37bltHxD1rDPwtNM8Q',list:'UUsXVk37bltHxD1rDPwtNM8Q',cat:'Curiosidades'},
+ {name:'TED',src:'UCAuUUnT6oDeKwE6v1NGQxug',list:'UUAuUUnT6oDeKwE6v1NGQxug',cat:'Educación'},
+ {name:'Veritasium',src:'UCHnyfMqiRRG1u-2MsSQLbXA',list:'UUHnyfMqiRRG1u-2MsSQLbXA',cat:'Ciencia'}
 ];
-let channels=LS('zap_channels',DEFAULTS), cur=LS('zap_cur',0), vol=LS('zap_vol',80), muted=false;
+let channels=LS('zap_channels',DEFAULTS).map(c=>({...c,cat:c.cat||'General'}));
+let cur=LS('zap_cur',0), vol=LS('zap_vol',80), filter=LS('zap_filter',''), muted=false;
+if(cur>=channels.length)cur=0;
 let player=null, ready=false, powered=false, seekPending=false, errStreak=0, lastIdx=0, numBuf='';
 let osdT,uiT,numT;
+const saveCh=()=>SV('zap_channels',channels);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+/* ---------- Categorías / pool ---------- */
+const usedCats=()=>[...new Set(channels.map(c=>c.cat||'General'))].sort((a,b)=>a.localeCompare(b,'es'));
+function pool(){const p=[];channels.forEach((c,i)=>{if(!filter||c.cat===filter)p.push(i)});return p.length?p:channels.map((_,i)=>i)}
+function setFilter(f,doTune=true){
+  filter=f;SV('zap_filter',filter);renderCats();renderGuide();
+  if(doTune&&channels.length){const p=pool();tune(p.includes(cur)?cur:p[Math.floor(Math.random()*p.length)])}
+}
+function renderCats(){
+  const u=usedCats();if(filter&&!u.includes(filter))filter='';
+  $('#catSel').innerHTML='<option value="">📺 Todas</option>'+u.map(c=>`<option value="${esc(c)}"${c===filter?' selected':''}>${esc(c)}</option>`).join('');
+  $('#chips').innerHTML=['',...u].map(c=>`<span class="chip${c===filter?' on':''}" data-c="${esc(c)}">${c?esc(c):'Todas'}</span>`).join('');
+  $('#cats').innerHTML=[...new Set([...PRESET_CATS,...u])].map(c=>`<option value="${esc(c)}">`).join('');
+}
+$('#catSel').onchange=e=>setFilter(e.target.value);
+$('#chips').addEventListener('click',e=>{const el=e.target.closest('.chip');if(el)setFilter(el.dataset.c)});
 
 /* ---------- YouTube API ---------- */
 const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);
@@ -145,15 +188,22 @@ function tune(i){
   else{lastIdx=Math.floor(Math.random()*25);player.loadPlaylist({listType:'playlist',list:c.list,index:lastIdx})}
   player.setVolume(vol);muted?player.mute():player.unMute();
 }
-const next=()=>tune(cur+1), prev=()=>tune(cur-1);
-function rand(){if(channels.length<2)return tune(cur);let i;do{i=Math.floor(Math.random()*channels.length)}while(i===cur);tune(i)}
+function step(d){
+  const p=pool(),k=p.indexOf(cur);
+  tune(k<0?p[0]:p[(k+d+p.length)%p.length]);
+}
+const next=()=>step(1), prev=()=>step(-1);
+function rand(){const p=pool();if(p.length<2)return tune(cur);let i;do{i=p[Math.floor(Math.random()*p.length)]}while(i===cur);tune(i)}
 function vNext(){if(!ready)return;const c=channels[cur];if(c&&c.vid)return tune(cur);showNoise(400);seekPending=true;try{player.nextVideo()}catch(_){}}
 function vPrev(){if(!ready)return;const c=channels[cur];if(c&&c.vid)return tune(cur);showNoise(400);try{player.previousVideo()}catch(_){}}
+function cycleCat(){const u=['',...usedCats()];setFilter(u[(u.indexOf(filter)+1)%u.length])}
 
 /* ---------- OSD / ruido ---------- */
 function osd(txt){
+  const c=channels[cur];
   $('#osdn').textContent=txt!=null?txt:String(cur+1).padStart(2,'0');
-  $('#osdc').textContent=txt!=null?'':(channels[cur]?channels[cur].name:'');
+  $('#osdc').textContent=txt!=null?'':(c?c.name:'');
+  $('#osdk').textContent=txt!=null?'':(c?c.cat:'');
   $('#osd').classList.add('on');clearTimeout(osdT);osdT=setTimeout(()=>$('#osd').classList.remove('on'),3500);
 }
 const cv=$('#noise'),cx=cv.getContext('2d');let noiseRAF=0,noiseEnd=0;
@@ -173,66 +223,116 @@ function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';cl
 
 /* ---------- Guía ---------- */
 function renderGuide(){
-  $('#list').innerHTML=channels.map((c,i)=>`<div class="ch ${i===cur?'cur':''}" data-i="${i}"><b>${String(i+1).padStart(2,'0')}</b><span>${esc(c.name)}</span></div>`).join('')||'<div class="ch">Sin canales. Abre ⚙ Canales.</div>';
+  const html=channels.map((c,i)=>(!filter||c.cat===filter)?`<div class="ch ${i===cur?'cur':''}" data-i="${i}"><b>${String(i+1).padStart(2,'0')}</b><span>${esc(c.name)}</span><i>${esc(c.cat)}</i></div>`:'').join('');
+  $('#list').innerHTML=html||'<div class="ch">Sin canales. Abre ⚙ Canales.</div>';
 }
-const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 $('#list').addEventListener('click',e=>{const el=e.target.closest('.ch');if(el&&el.dataset.i!=null){tune(+el.dataset.i);$('#guide').classList.remove('on')}});
 const toggleGuide=()=>$('#guide').classList.toggle('on');
 
-/* ---------- Editor / resolución de fuentes ---------- */
-function openEditor(){
-  $('#txt').value=channels.map(c=>c.name+' | '+c.src).join('\n');
-  $('#apikey').value=LS('zap_key','');$('#status').textContent='';$('#editor').classList.add('on');
-}
-function closeEditor(){$('#editor').classList.remove('on')}
-async function resolveHandle(h,key){
-  if(key){
-    const r=await fetch('https://www.googleapis.com/youtube/v3/channels?part=id,snippet&forHandle=@'+encodeURIComponent(h)+'&key='+encodeURIComponent(key));
-    const j=await r.json();
-    if(j.items&&j.items[0])return{id:j.items[0].id,name:j.items[0].snippet.title};
-    throw new Error(j.error?j.error.message:'handle no encontrado');
-  }
-  const url='https://www.youtube.com/@'+h;
-  const proxies=['https://api.allorigins.win/raw?url=','https://corsproxy.io/?'];
-  for(const p of proxies){
+/* ---------- Resolución de URLs ---------- */
+async function fetchPage(url){
+  for(const p of ['https://api.allorigins.win/raw?url=','https://corsproxy.io/?']){
     try{
       const r=await fetch(p+encodeURIComponent(url));if(!r.ok)continue;
       const html=await r.text();
-      const m=html.match(/"externalId":"(UC[\w-]{22})"/)||html.match(/"channelId":"(UC[\w-]{22})"/)||html.match(/channel\/(UC[\w-]{22})/);
-      if(m){const n=html.match(/<meta property="og:title" content="([^"]*)"/);return{id:m[1],name:n?n[1]:h}}
+      const m=html.match(/"externalId":"(UC[\w-]{22})"/)||html.match(/<link rel="canonical" href="https:\/\/www\.youtube\.com\/channel\/(UC[\w-]{22})"/)||html.match(/"channelId":"(UC[\w-]{22})"/);
+      if(m){const n=html.match(/<meta property="og:title" content="([^"]*)"/);return{id:m[1],name:n?n[1].replace(/&amp;/g,'&').replace(/&#39;/g,"'"):''}}
     }catch(_){}
   }
-  throw new Error('no se pudo resolver @'+h+' (usa el ID UC… o una API key)');
+  return null;
 }
-async function parseLine(line,key,old){
-  let name='',src=line.trim();
-  if(src.includes('|')){const k=src.indexOf('|');name=src.slice(0,k).trim();src=src.slice(k+1).trim()}
-  if(!src)return null;
-  const prev=old.find(c=>c.src===src);
-  if(prev)return{...prev,name:name||prev.name};
-  let m;
-  if((m=src.match(/[?&]list=([\w-]+)/)))return{name:name||'Lista '+m[1].slice(-4),src,list:m[1]};
-  if((m=src.match(/(UC[\w-]{22})/)))return{name:name||m[1].slice(0,8),src,list:'UU'+m[1].slice(2)};
-  if((m=src.match(/^(PL|UU|OL|FL|LL)[\w-]{10,}$/)))return{name:name||'Lista '+src.slice(-4),src,list:src};
-  if((m=src.match(/[?&]v=([\w-]{11})/)||src.match(/youtu\.be\/([\w-]{11})/)||src.match(/\/(?:live|shorts|embed)\/([\w-]{11})/)))return{name:name||'Video '+m[1].slice(0,4),src,vid:m[1]};
-  if((m=src.match(/@([\w.\-%]+)/))||(m=src.match(/^([\w.\-]+)$/))){
-    const r=await resolveHandle(m[1],key);
-    return{name:name||r.name,src,list:'UU'+r.id.slice(2)};
+async function apiChannel(qs,key){
+  try{
+    const r=await fetch('https://www.googleapis.com/youtube/v3/channels?part=id,snippet&'+qs+'&key='+encodeURIComponent(key));
+    const j=await r.json();
+    if(j.items&&j.items[0])return{id:j.items[0].id,name:j.items[0].snippet.title};
+  }catch(_){}
+  return null;
+}
+async function resolveChannelPath(path,key){
+  // path: "outdoorboys" | "@outdoorboys" | "c/outdoorboys" | "user/xyz"
+  let m,handle=null,user=null;
+  if((m=path.match(/^user\/([^\/?#]+)/)))user=m[1];
+  else if((m=path.match(/^c\/([^\/?#]+)/)))handle=m[1];
+  else if((m=path.match(/^@?([^\/?#]+)/)))handle=m[1];
+  handle&&(handle=decodeURIComponent(handle).replace(/^@/,''));
+  if(key){
+    let r=null;
+    if(handle)r=await apiChannel('forHandle=@'+encodeURIComponent(handle),key);
+    if(!r&&(user||handle))r=await apiChannel('forUsername='+encodeURIComponent(user||handle),key);
+    if(r)return r;
   }
-  throw new Error('fuente no reconocida: '+src);
+  const urls=[];
+  if(user)urls.push('https://www.youtube.com/user/'+user);
+  if(handle){urls.push('https://www.youtube.com/@'+handle);urls.push('https://www.youtube.com/c/'+handle);urls.push('https://www.youtube.com/'+handle)}
+  for(const u of urls){const r=await fetchPage(u);if(r)return r}
+  throw new Error('no se pudo resolver el canal (prueba con el ID UC… o agrega una API key)');
 }
-async function saveEditor(){
+async function parseSource(src,key){
+  src=src.trim();let m;
+  if(!src)throw new Error('falta la URL');
+  if((m=src.match(/[?&]list=([\w-]+)/)))return{name:'Lista '+m[1].slice(-4),list:m[1]};
+  if((m=src.match(/(UC[\w-]{22})/)))return{name:'',list:'UU'+m[1].slice(2),needName:m[1]};
+  if((m=src.match(/^(PL|UU|OL|FL|LL)[\w-]{10,}$/)))return{name:'Lista '+src.slice(-4),list:src};
+  if((m=src.match(/[?&]v=([\w-]{11})/)||src.match(/youtu\.be\/([\w-]{11})/)||src.match(/\/(?:live|shorts|embed)\/([\w-]{11})/)))return{name:'Video '+m[1].slice(0,4),vid:m[1]};
+  let path=src.replace(/^https?:\/\//i,'').replace(/^(www\.|m\.)?youtube\.com\/?/i,'').replace(/^\/+/,'');
+  if(!path)throw new Error('URL no reconocida');
+  const r=await resolveChannelPath(path,key);
+  return{name:r.name,list:'UU'+r.id.slice(2)};
+}
+
+/* ---------- Editor ---------- */
+function openEditor(){
+  $('#apikey').value=LS('zap_key','');$('#status').textContent='';
+  renderEditor();$('#editor').classList.add('on');setTimeout(()=>$('#nUrl').focus(),50);
+}
+function closeEditor(){$('#editor').classList.remove('on');if(channels.length&&powered&&!channels[cur])tune(0)}
+function renderEditor(){
+  renderCats();
+  $('#elist').innerHTML=channels.map((c,i)=>`<div class="erow" data-i="${i}">
+    <b>${String(i+1).padStart(2,'0')}</b>
+    <input type="text" class="en" value="${esc(c.name)}" placeholder="Nombre">
+    <input type="text" class="ec" list="cats" value="${esc(c.cat)}" placeholder="Categoría">
+    <button class="sm ed" title="Eliminar">🗑</button>
+    <div class="u">${esc(c.src||'')}</div></div>`).join('')||'<p>Todavía no hay canales.</p>';
+}
+$('#elist').addEventListener('change',e=>{
+  const row=e.target.closest('.erow');if(!row)return;const c=channels[+row.dataset.i];
+  if(e.target.classList.contains('en'))c.name=e.target.value.trim()||c.name;
+  if(e.target.classList.contains('ec'))c.cat=e.target.value.trim()||'General';
+  saveCh();renderCats();renderGuide();
+});
+$('#elist').addEventListener('click',e=>{
+  if(!e.target.classList.contains('ed'))return;
+  const i=+e.target.closest('.erow').dataset.i;
+  if(!confirm('¿Eliminar "'+channels[i].name+'"?'))return;
+  channels.splice(i,1);saveCh();
+  if(cur>=channels.length)cur=Math.max(0,channels.length-1);
+  else if(cur>i)cur--;
+  SV('zap_cur',cur);renderEditor();renderGuide();
+});
+async function addChannel(){
+  const url=$('#nUrl').value.trim(),name=$('#nName').value.trim(),cat=$('#nCat').value.trim()||'General';
   const key=$('#apikey').value.trim();SV('zap_key',key);
-  const lines=$('#txt').value.split('\n').map(l=>l.trim()).filter(Boolean);
-  const out=[],errs=[];$('#status').textContent='Resolviendo…';
-  for(const l of lines){try{const c=await parseLine(l,key,channels);if(c)out.push(c)}catch(e){errs.push(l+' → '+e.message)}}
-  if(errs.length){$('#status').textContent='Errores (esas líneas se omitieron):\n'+errs.join('\n')}
-  if(!out.length&&errs.length)return;
-  channels=out;SV('zap_channels',channels);
-  if(!errs.length)closeEditor();
-  tune(0);
+  if(!url){$('#status').textContent='Ingresa la URL del canal.';return}
+  $('#status').textContent='Resolviendo…';$('#nAdd').disabled=true;
+  try{
+    const r=await parseSource(url,key);
+    if(r.needName&&!name){const n=await fetchPage('https://www.youtube.com/channel/'+r.needName);r.name=n&&n.name?n.name:r.needName.slice(0,10)}
+    const ch={name:name||r.name||'Canal',src:url,cat};
+    if(r.list)ch.list=r.list;else ch.vid=r.vid;
+    channels.push(ch);saveCh();
+    $('#nName').value='';$('#nUrl').value='';
+    $('#status').textContent='✔ Agregado: '+ch.name+' ('+ch.cat+')';
+    renderEditor();renderGuide();
+    if(channels.length===1&&powered)tune(0);
+  }catch(e){$('#status').textContent='Error: '+e.message}
+  $('#nAdd').disabled=false;
 }
-$('#eSave').onclick=saveEditor;$('#eCancel').onclick=closeEditor;
+$('#nAdd').onclick=addChannel;
+['#nName','#nUrl','#nCat'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addChannel()}}));
+$('#apikey').addEventListener('change',e=>SV('zap_key',e.target.value.trim()));
+$('#eClose').onclick=closeEditor;
 $('#eExport').onclick=()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(channels,null,1)],{type:'application/json'}));
   a.download='zaptv-canales.json';a.click();
@@ -240,8 +340,14 @@ $('#eExport').onclick=()=>{
 $('#eImport').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
-  try{const j=JSON.parse(await f.text());if(!Array.isArray(j))throw 0;
-    $('#txt').value=j.map(c=>(c.name||'')+' | '+(c.src||c.list||c.vid)).join('\n')}catch(_){$('#status').textContent='Archivo inválido'}
+  try{
+    const j=JSON.parse(await f.text());if(!Array.isArray(j))throw 0;
+    const ok=j.filter(c=>c&&c.name&&(c.list||c.vid)).map(c=>({...c,cat:c.cat||'General'}));
+    if(!ok.length)throw 0;
+    channels=ok;saveCh();cur=0;renderEditor();renderGuide();
+    $('#status').textContent='✔ Importados '+ok.length+' canales';
+  }catch(_){$('#status').textContent='Archivo inválido'}
+  e.target.value='';
 };
 
 /* ---------- Controles ---------- */
@@ -264,7 +370,8 @@ let ty=null;$('#tap').addEventListener('touchstart',e=>{ty=e.touches[0].clientY}
 $('#tap').addEventListener('touchend',e=>{if(ty==null)return;const d=e.changedTouches[0].clientY-ty;ty=null;if(Math.abs(d)>70){d<0?next():prev()}},{passive:true});
 
 addEventListener('keydown',e=>{
-  if(!powered||/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;
+  if(!powered)return;
+  if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){if(e.key==='Escape'){document.activeElement.blur();closeEditor()}return}
   const k=e.key;
   if(k==='ArrowUp'||k==='PageUp'){e.preventDefault();next()}
   else if(k==='ArrowDown'||k==='PageDown'){e.preventDefault();prev()}
@@ -274,11 +381,13 @@ addEventListener('keydown',e=>{
   else if(k==='f'||k==='F')toggleFull();
   else if(k==='g'||k==='G')toggleGuide();
   else if(k==='r'||k==='R')rand();
+  else if(k==='c'||k==='C')cycleCat();
   else if(k==='e'||k==='E')openEditor();
   else if(k==='Escape'){$('#guide').classList.remove('on');closeEditor()}
   else if(/^\d$/.test(k)){
     numBuf=(numBuf+k).slice(-3);osd(numBuf);clearTimeout(numT);
-    numT=setTimeout(()=>{const n=parseInt(numBuf,10);numBuf='';if(n>=1&&n<=channels.length)tune(n-1);else osd()},1200);
+    numT=setTimeout(()=>{const n=parseInt(numBuf,10);numBuf='';
+      if(n>=1&&n<=channels.length){if(filter&&channels[n-1].cat!==filter)setFilter('',false);tune(n-1)}else osd()},1200);
   }
 });
 
@@ -286,7 +395,7 @@ $('#power').onclick=()=>{
   powered=true;$('#power').style.display='none';showUI();
   if(ready){tune(cur)}
 };
-renderGuide();
+renderCats();renderGuide();
 </script>
 </body>
 </html>
