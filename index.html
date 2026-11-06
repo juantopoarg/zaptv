@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>ZapTV</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -26,6 +27,18 @@ button.sm{padding:6px 10px;font-size:13px}
 input[type=range]{accent-color:#5dff7a;width:90px}
 #guide{position:fixed;top:0;left:0;bottom:0;width:min(380px,92vw);z-index:10;background:rgba(8,16,10,.96);border-right:1px solid #2f4a36;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column}
 #guide.on{transform:none}
+#hist{position:fixed;top:0;right:0;bottom:0;width:min(380px,92vw);z-index:10;background:rgba(8,16,10,.96);border-left:1px solid #2f4a36;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column}
+#hist.on{transform:none}
+#hist h2{padding:16px;font-size:18px;border-bottom:1px solid #2f4a36;display:flex;justify-content:space-between;align-items:center}
+#hlist{overflow:auto;flex:1}
+.hi{padding:10px 16px;cursor:pointer;border-bottom:1px solid #14221a;display:flex;gap:12px;align-items:center}
+.hi:hover{background:#17281c}
+.hi.now{background:#1f3a27}
+.hi b{font:700 14px ui-monospace,Consolas,monospace;color:#5dff7a;min-width:24px}
+.hi div{flex:1;min-width:0}
+.hi small{display:block;opacity:.65;font-size:12px}
+.hi span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ver{font-size:12px;opacity:.4}
 #guide h2{padding:16px;font-size:18px;border-bottom:1px solid #2f4a36;display:flex;justify-content:space-between;align-items:center}
 #chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid #14221a}
 .chip{padding:5px 11px;border-radius:99px;font-size:13px;background:#14221a;border:1px solid #2f4a36;cursor:pointer}
@@ -66,6 +79,8 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 
 <div id="bar">
   <button id="bGuide" title="Guía (G)">☰ Guía</button>
+  <button id="bBack" title="Volver al programa anterior (B)">↩ Volver</button>
+  <button id="bHist" title="Historial (H)">🕘</button>
   <select id="catSel" title="Categoría (C)"></select>
   <button id="bPrev" title="Canal anterior (↓)">◀ CH</button>
   <button id="bNext" title="Canal siguiente (↑)">CH ▶</button>
@@ -83,6 +98,11 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <h2>Guía de canales <button id="gClose">✕</button></h2>
   <div id="chips"></div>
   <div id="list"></div>
+</aside>
+
+<aside id="hist">
+  <h2>Últimos 10 programas <button id="hClose">✕</button></h2>
+  <div id="hlist"></div>
 </aside>
 
 <div id="editor"><div class="box">
@@ -112,7 +132,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   </div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · G guía</p></div>
+<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · G guía</p><span id="ver">v3</span></div>
 <div id="toast"></div>
 
 <script>
@@ -131,6 +151,7 @@ let cur=LS('zap_cur',0), vol=LS('zap_vol',80), filter=LS('zap_filter',''), muted
 if(cur>=channels.length)cur=0;
 let player=null, ready=false, powered=false, seekPending=false, errStreak=0, lastIdx=0, numBuf='';
 let osdT,uiT,numT;
+let hist=LS('zap_hist',[]), curProg=null, loading=false, histPlay=false;
 const saveCh=()=>SV('zap_channels',channels);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
@@ -161,12 +182,12 @@ window.onYouTubeIframeAPIReady=()=>{
 };
 function onState(e){
   if(e.data===1){
-    errStreak=0;hideNoise();
+    errStreak=0;hideNoise();loading=false;trackProgram();
     if(seekPending){seekPending=false;
       try{const d=player.getDuration();if(d>400)player.seekTo(Math.random()*d*0.7,true)}catch(_){}}
-    try{const t=player.getVideoData().title;if(t)$('#osdt').textContent=t}catch(_){}
+    try{const t=player.getVideoData().title;if(t){$('#osdt').textContent=t;if(curProg&&!curProg.title){curProg.title=t;saveHist()}}}catch(_){}
   }
-  if(e.data===0&&channels[cur]&&channels[cur].vid)tune(cur);
+  if(e.data===0&&channels[cur]&&(channels[cur].vid||histPlay))tune(cur);
 }
 function onErr(){
   const c=channels[cur];
@@ -181,6 +202,7 @@ function tune(i){
   if(!channels.length){openEditor();return}
   cur=((i%channels.length)+channels.length)%channels.length;SV('zap_cur',cur);
   const c=channels[cur];
+  snap();loading=true;histPlay=false;
   showNoise(900);osd();renderGuide();errStreak=0;seekPending=true;
   $('#osdt').textContent='';
   if(!ready)return;
@@ -194,8 +216,8 @@ function step(d){
 }
 const next=()=>step(1), prev=()=>step(-1);
 function rand(){const p=pool();if(p.length<2)return tune(cur);let i;do{i=p[Math.floor(Math.random()*p.length)]}while(i===cur);tune(i)}
-function vNext(){if(!ready)return;const c=channels[cur];if(c&&c.vid)return tune(cur);showNoise(400);seekPending=true;try{player.nextVideo()}catch(_){}}
-function vPrev(){if(!ready)return;const c=channels[cur];if(c&&c.vid)return tune(cur);showNoise(400);try{player.previousVideo()}catch(_){}}
+function vNext(){if(!ready)return;const c=channels[cur];if(c&&(c.vid||histPlay))return tune(cur);snap();loading=true;showNoise(400);seekPending=true;try{player.nextVideo()}catch(_){}}
+function vPrev(){if(!ready)return;const c=channels[cur];if(c&&(c.vid||histPlay))return tune(cur);snap();loading=true;showNoise(400);try{player.previousVideo()}catch(_){}}
 function cycleCat(){const u=['',...usedCats()];setFilter(u[(u.indexOf(filter)+1)%u.length])}
 
 /* ---------- OSD / ruido ---------- */
@@ -220,6 +242,42 @@ function showNoise(ms){
 }
 function hideNoise(){noiseEnd=0}
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',5000)}
+
+/* ---------- Historial (últimos 10 programas) ---------- */
+const saveHist=()=>SV('zap_hist',hist);
+function snap(){try{if(ready&&!loading&&curProg&&player.getPlayerState()!==-1){const t=player.getCurrentTime();if(t>=0){curProg.t=t;saveHist()}}}catch(_){}}
+function trackProgram(){
+  try{
+    const vd=player.getVideoData();const vid=vd&&vd.video_id;if(!vid)return;
+    if(curProg&&curProg.vid===vid)return;
+    const c=channels[cur]||{};
+    curProg=hist.find(h=>h.vid===vid)||{vid,t:0};
+    curProg.title=vd.title||curProg.title||'';curProg.ch=c.name||'';curProg.cat=c.cat||'';curProg.at=Date.now();
+    hist=hist.filter(h=>h.vid!==vid);hist.unshift(curProg);hist=hist.slice(0,10);
+    saveHist();renderHist();
+  }catch(_){}
+}
+setInterval(()=>{if(ready&&!loading&&curProg&&player.getPlayerState&&player.getPlayerState()===1)snap()},2000);
+const fmt=t=>{t=Math.floor(t||0);const m=Math.floor(t/60),s=t%60;return m+':'+String(s).padStart(2,'0')};
+function renderHist(){
+  $('#hlist').innerHTML=hist.map((h,i)=>`<div class="hi${curProg&&h.vid===curProg.vid?' now':''}" data-i="${i}"><b>${i+1}</b><div><span>${esc(h.title||h.vid)}</span><small>${esc(h.ch||'')}${h.cat?' · '+esc(h.cat):''} · ${fmt(h.t)}</small></div></div>`).join('')||'<div class="hi">Todavía no hay programas.</div>';
+}
+function playHist(i){
+  const h=hist[i];if(!h||!ready)return;
+  snap();loading=true;histPlay=true;seekPending=false;errStreak=0;
+  const ci=channels.findIndex(c=>c.name===h.ch);if(ci>=0){cur=ci;SV('zap_cur',cur)}
+  showNoise(700);osd();renderGuide();$('#osdt').textContent=h.title||'';
+  player.loadVideoById({videoId:h.vid,startSeconds:Math.max(0,Math.floor((h.t||0)-2))});
+  player.setVolume(vol);muted?player.mute():player.unMute();
+}
+function goBack(){
+  const i=curProg?hist.findIndex(h=>h.vid===curProg.vid):-1;
+  const t=hist[i+1];if(!t){toast('No hay programa anterior en el historial.');return}
+  playHist(i+1);
+}
+const toggleHist=()=>{renderHist();$('#hist').classList.toggle('on')};
+$('#hlist').addEventListener('click',e=>{const el=e.target.closest('.hi');if(el&&el.dataset.i!=null){playHist(+el.dataset.i);$('#hist').classList.remove('on')}});
+$('#hClose').onclick=toggleHist;$('#bHist').onclick=toggleHist;$('#bBack').onclick=goBack;
 
 /* ---------- Guía ---------- */
 function renderGuide(){
@@ -361,9 +419,9 @@ function togglePlay(){if(!ready)return;player.getPlayerState()===1?player.pauseV
 function toggleMute(){if(!ready)return;muted=!muted;muted?player.mute():player.unMute();$('#bMute').textContent=muted?'🔇':'🔊'}
 function toggleFull(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}
 
-function showUI(){$('#bar').classList.remove('hide');clearTimeout(uiT);uiT=setTimeout(()=>{if(!$('#guide').classList.contains('on'))$('#bar').classList.add('hide')},3500)}
+function showUI(){$('#bar').classList.remove('hide');clearTimeout(uiT);uiT=setTimeout(()=>{if(!$('#guide').classList.contains('on')&&!$('#hist').classList.contains('on'))$('#bar').classList.add('hide')},3500)}
 addEventListener('mousemove',showUI);addEventListener('touchstart',showUI,{passive:true});
-$('#tap').addEventListener('click',()=>{$('#guide').classList.remove('on');$('#bar').classList.contains('hide')?showUI():$('#bar').classList.add('hide')});
+$('#tap').addEventListener('click',()=>{$('#guide').classList.remove('on');$('#hist').classList.remove('on');$('#bar').classList.contains('hide')?showUI():$('#bar').classList.add('hide')});
 $('#tap').addEventListener('dblclick',toggleFull);
 let wl=0;$('#tap').addEventListener('wheel',e=>{const t=Date.now();if(t-wl<500)return;wl=t;e.deltaY<0?next():prev()},{passive:true});
 let ty=null;$('#tap').addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
@@ -382,8 +440,10 @@ addEventListener('keydown',e=>{
   else if(k==='g'||k==='G')toggleGuide();
   else if(k==='r'||k==='R')rand();
   else if(k==='c'||k==='C')cycleCat();
+  else if(k==='b'||k==='B'||k==='Backspace'){e.preventDefault();goBack()}
+  else if(k==='h'||k==='H')toggleHist();
   else if(k==='e'||k==='E')openEditor();
-  else if(k==='Escape'){$('#guide').classList.remove('on');closeEditor()}
+  else if(k==='Escape'){$('#guide').classList.remove('on');$('#hist').classList.remove('on');closeEditor()}
   else if(/^\d$/.test(k)){
     numBuf=(numBuf+k).slice(-3);osd(numBuf);clearTimeout(numT);
     numT=setTimeout(()=>{const n=parseInt(numBuf,10);numBuf='';
@@ -395,7 +455,7 @@ $('#power').onclick=()=>{
   powered=true;$('#power').style.display='none';showUI();
   if(ready){tune(cur)}
 };
-renderCats();renderGuide();
+renderCats();renderGuide();renderHist();
 </script>
 </body>
 </html>
