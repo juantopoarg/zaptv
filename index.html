@@ -39,6 +39,15 @@ input[type=range]{accent-color:#5dff7a;width:90px}
 .hi small{display:block;opacity:.65;font-size:12px}
 .hi span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ver{font-size:12px;opacity:.4}
+#ccmenu{position:fixed;right:12px;bottom:70px;z-index:12;width:min(320px,92vw);max-height:70vh;overflow:auto;background:rgba(8,16,10,.97);border:1px solid #2f4a36;border-radius:12px;padding:12px;display:none}
+#ccmenu.on{display:block}
+#ccmenu h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.65;margin:10px 0 6px}
+#ccmenu h4:first-child{margin-top:0}
+.cco{padding:8px 10px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.cco:hover{background:#17281c}
+.cco.on{background:#1f3a27}
+.cco.on::after{content:'✔';color:#5dff7a}
+#ccmenu small{display:block;opacity:.6;font-size:12px;padding:4px 10px}
 #guide h2{padding:16px;font-size:18px;border-bottom:1px solid #2f4a36;display:flex;justify-content:space-between;align-items:center}
 #chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid #14221a}
 .chip{padding:5px 11px;border-radius:99px;font-size:13px;background:#14221a;border:1px solid #2f4a36;cursor:pointer}
@@ -56,6 +65,7 @@ input[type=range]{accent-color:#5dff7a;width:90px}
 .box h2{margin-bottom:10px}
 .box h3{margin:18px 0 8px;font-size:14px;opacity:.85}
 .box p{font-size:13px;opacity:.75;margin-bottom:10px;line-height:1.45}
+select.x,.add select,.erow select{width:100%;padding:9px;font-size:14px;background:#07100a}
 input[type=text],input[type=password]{width:100%;background:#07100a;color:#e8ffe8;border:1px solid #2f4a36;border-radius:8px;padding:9px;font:14px system-ui,Segoe UI,Roboto,sans-serif}
 .add{display:grid;grid-template-columns:1fr 1.6fr 1fr auto;gap:8px;align-items:center}
 @media(max-width:640px){.add{grid-template-columns:1fr}}
@@ -81,6 +91,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <button id="bGuide" title="Guía (G)">☰ Guía</button>
   <button id="bBack" title="Volver al programa anterior (B)">↩ Volver</button>
   <button id="bHist" title="Historial (H)">🕘</button>
+  <button id="bCC" title="Idioma y subtítulos (S)">CC</button>
   <select id="catSel" title="Categoría (C)"></select>
   <button id="bPrev" title="Canal anterior (↓)">◀ CH</button>
   <button id="bNext" title="Canal siguiente (↑)">CH ▶</button>
@@ -100,6 +111,8 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="list"></div>
 </aside>
 
+<div id="ccmenu"></div>
+
 <aside id="hist">
   <h2>Últimos 10 programas <button id="hClose">✕</button></h2>
   <div id="hlist"></div>
@@ -111,10 +124,9 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div class="add">
     <input type="text" id="nName" placeholder="Nombre (opcional)">
     <input type="text" id="nUrl" placeholder="URL, ej: https://www.youtube.com/outdoorboys">
-    <input type="text" id="nCat" list="cats" placeholder="Categoría">
+    <select id="nCat" title="Categoría"></select>
     <button class="pri" id="nAdd">Agregar</button>
   </div>
-  <datalist id="cats"></datalist>
   <p style="margin-top:8px">Acepta: <code>youtube.com/nombre</code>, <code>/@handle</code>, <code>/c/nombre</code>, <code>/user/nombre</code>, <code>/channel/UC…</code>, ID <code>UC…</code>, listas (<code>list=PL…</code>) y videos sueltos.</p>
   <div id="status"></div>
 
@@ -132,7 +144,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   </div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · G guía</p><span id="ver">v3</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía</p><span id="ver">v4</span></div>
 <div id="toast"></div>
 
 <script>
@@ -151,7 +163,7 @@ let cur=LS('zap_cur',0), vol=LS('zap_vol',80), filter=LS('zap_filter',''), muted
 if(cur>=channels.length)cur=0;
 let player=null, ready=false, powered=false, seekPending=false, errStreak=0, lastIdx=0, numBuf='';
 let osdT,uiT,numT;
-let hist=LS('zap_hist',[]), curProg=null, loading=false, histPlay=false;
+let ccPref=LS('zap_cc',{lang:''}), ccVid='', hist=LS('zap_hist',[]), curProg=null, loading=false, histPlay=false;
 const saveCh=()=>SV('zap_channels',channels);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
@@ -166,7 +178,6 @@ function renderCats(){
   const u=usedCats();if(filter&&!u.includes(filter))filter='';
   $('#catSel').innerHTML='<option value="">📺 Todas</option>'+u.map(c=>`<option value="${esc(c)}"${c===filter?' selected':''}>${esc(c)}</option>`).join('');
   $('#chips').innerHTML=['',...u].map(c=>`<span class="chip${c===filter?' on':''}" data-c="${esc(c)}">${c?esc(c):'Todas'}</span>`).join('');
-  $('#cats').innerHTML=[...new Set([...PRESET_CATS,...u])].map(c=>`<option value="${esc(c)}">`).join('');
 }
 $('#catSel').onchange=e=>setFilter(e.target.value);
 $('#chips').addEventListener('click',e=>{const el=e.target.closest('.chip');if(el)setFilter(el.dataset.c)});
@@ -182,7 +193,7 @@ window.onYouTubeIframeAPIReady=()=>{
 };
 function onState(e){
   if(e.data===1){
-    errStreak=0;hideNoise();loading=false;trackProgram();
+    errStreak=0;hideNoise();loading=false;trackProgram();ccOnPlay();
     if(seekPending){seekPending=false;
       try{const d=player.getDuration();if(d>400)player.seekTo(Math.random()*d*0.7,true)}catch(_){}}
     try{const t=player.getVideoData().title;if(t){$('#osdt').textContent=t;if(curProg&&!curProg.title){curProg.title=t;saveHist()}}}catch(_){}
@@ -279,6 +290,53 @@ const toggleHist=()=>{renderHist();$('#hist').classList.toggle('on')};
 $('#hlist').addEventListener('click',e=>{const el=e.target.closest('.hi');if(el&&el.dataset.i!=null){playHist(+el.dataset.i);$('#hist').classList.remove('on')}});
 $('#hClose').onclick=toggleHist;$('#bHist').onclick=toggleHist;$('#bBack').onclick=goBack;
 
+/* ---------- Idioma y subtítulos ---------- */
+const CC_LANGS=[['','Desactivados'],['es','Español'],['en','English'],['pt','Português'],['fr','Français'],['de','Deutsch'],['it','Italiano'],['ja','日本語'],['ko','한국어'],['zh-Hans','中文']];
+function ccTracks(){try{return player.getOption('captions','tracklist')||[]}catch(_){return []}}
+function applyCC(retry){
+  retry=retry||0;
+  try{
+    if(!ccPref.lang){player.unloadModule('captions');return}
+    player.loadModule('captions');
+    setTimeout(()=>{
+      const tl=ccTracks();
+      if(!tl.length){if(retry<3)applyCC(retry+1);return}
+      const t=tl.find(x=>x.languageCode===ccPref.lang)||tl.find(x=>(x.languageCode||'').startsWith(ccPref.lang.split('-')[0]));
+      if(t)player.setOption('captions','track',{languageCode:t.languageCode});
+      else{player.setOption('captions','track',{languageCode:tl[0].languageCode});player.setOption('captions','track',{translationLanguage:ccPref.lang})}
+    },600);
+  }catch(_){}
+}
+function ccOnPlay(){
+  try{const v=player.getVideoData().video_id;if(v&&v!==ccVid){ccVid=v;applyCC()}}catch(_){}
+}
+function renderCC(){
+  const tl=ccPref.lang!==undefined&&$('#ccmenu').classList.contains('on')?ccTracks():[];
+  $('#ccmenu').innerHTML='<h4>Idioma preferido (todos los canales)</h4>'+
+    CC_LANGS.map(([c,n])=>`<div class="cco${ccPref.lang===c?' on':''}" data-l="${c}">${n}</div>`).join('')+
+    '<small>Usa subtítulos en ese idioma si existen; si no, la traducción automática de YouTube.</small>'+
+    '<h4>Pistas de este video</h4>'+
+    (tl.length?tl.map(t=>`<div class="cco" data-t="${esc(t.languageCode)}">${esc(t.displayName||t.languageName||t.languageCode)}</div>`).join(''):'<small>Este video no ofrece subtítulos (o aún están cargando).</small>')+
+    '<small>El idioma del audio lo define YouTube; la API del reproductor no permite cambiarlo.</small>';
+}
+function toggleCC(){
+  const m=$('#ccmenu');m.classList.toggle('on');
+  if(m.classList.contains('on')){
+    renderCC();
+    try{player.loadModule('captions')}catch(_){}
+    setTimeout(renderCC,700);setTimeout(renderCC,1600);
+  }
+}
+$('#ccmenu').addEventListener('click',e=>{
+  const el=e.target.closest('.cco');if(!el)return;
+  if(el.dataset.l!==undefined){ccPref={lang:el.dataset.l};SV('zap_cc',ccPref);applyCC();toast_ok(el.dataset.l?'Subtítulos: '+el.textContent:'Subtítulos desactivados')}
+  else if(el.dataset.t){try{player.loadModule('captions');player.setOption('captions','track',{languageCode:el.dataset.t})}catch(_){}toast_ok('Pista: '+el.textContent)}
+  setTimeout(renderCC,300);
+});
+function toast_ok(m){osdMsg(m)}
+function osdMsg(m){$('#osdt').textContent=m;$('#osd').classList.add('on');clearTimeout(osdT);osdT=setTimeout(()=>$('#osd').classList.remove('on'),2500)}
+$('#bCC').onclick=toggleCC;
+
 /* ---------- Guía ---------- */
 function renderGuide(){
   const html=channels.map((c,i)=>(!filter||c.cat===filter)?`<div class="ch ${i===cur?'cur':''}" data-i="${i}"><b>${String(i+1).padStart(2,'0')}</b><span>${esc(c.name)}</span><i>${esc(c.cat)}</i></div>`:'').join('');
@@ -345,20 +403,31 @@ function openEditor(){
   renderEditor();$('#editor').classList.add('on');setTimeout(()=>$('#nUrl').focus(),50);
 }
 function closeEditor(){$('#editor').classList.remove('on');if(channels.length&&powered&&!channels[cur])tune(0)}
+function catSelect(val,cls){
+  const all=[...new Set([...PRESET_CATS,...usedCats(),val].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  return `<select class="${cls}">`+all.map(c=>`<option value="${esc(c)}"${c===val?' selected':''}>${esc(c)}</option>`).join('')+'<option value="__new__">＋ Nueva categoría…</option></select>';
+}
+function fillNCat(val){
+  $('#nCat').innerHTML=catSelect(val||filter||'General','x').replace(/^<select[^>]*>|<\/select>$/g,'');
+}
 function renderEditor(){
-  renderCats();
+  renderCats();fillNCat($('#nCat').value&&$('#nCat').value!=='__new__'?$('#nCat').value:'');
   $('#elist').innerHTML=channels.map((c,i)=>`<div class="erow" data-i="${i}">
     <b>${String(i+1).padStart(2,'0')}</b>
     <input type="text" class="en" value="${esc(c.name)}" placeholder="Nombre">
-    <input type="text" class="ec" list="cats" value="${esc(c.cat)}" placeholder="Categoría">
+    ${catSelect(c.cat,'ec')}
     <button class="sm ed" title="Eliminar">🗑</button>
     <div class="u">${esc(c.src||'')}</div></div>`).join('')||'<p>Todavía no hay canales.</p>';
 }
 $('#elist').addEventListener('change',e=>{
   const row=e.target.closest('.erow');if(!row)return;const c=channels[+row.dataset.i];
   if(e.target.classList.contains('en'))c.name=e.target.value.trim()||c.name;
-  if(e.target.classList.contains('ec'))c.cat=e.target.value.trim()||'General';
-  saveCh();renderCats();renderGuide();
+  if(e.target.classList.contains('ec')){
+    let v=e.target.value;
+    if(v==='__new__'){v=(prompt('Nombre de la nueva categoría:')||'').trim();if(!v){renderEditor();return}}
+    c.cat=v||'General';
+  }
+  saveCh();renderEditor();renderGuide();
 });
 $('#elist').addEventListener('click',e=>{
   if(!e.target.classList.contains('ed'))return;
@@ -370,7 +439,7 @@ $('#elist').addEventListener('click',e=>{
   SV('zap_cur',cur);renderEditor();renderGuide();
 });
 async function addChannel(){
-  const url=$('#nUrl').value.trim(),name=$('#nName').value.trim(),cat=$('#nCat').value.trim()||'General';
+  const url=$('#nUrl').value.trim(),name=$('#nName').value.trim(),cat=($('#nCat').value&&$('#nCat').value!=='__new__')?$('#nCat').value:'General';
   const key=$('#apikey').value.trim();SV('zap_key',key);
   if(!url){$('#status').textContent='Ingresa la URL del canal.';return}
   $('#status').textContent='Resolviendo…';$('#nAdd').disabled=true;
@@ -387,6 +456,11 @@ async function addChannel(){
   }catch(e){$('#status').textContent='Error: '+e.message}
   $('#nAdd').disabled=false;
 }
+$('#nCat').addEventListener('change',e=>{
+  if(e.target.value!=='__new__')return;
+  const v=(prompt('Nombre de la nueva categoría:')||'').trim();
+  if(v){fillNCat(v)}else fillNCat('General');
+});
 $('#nAdd').onclick=addChannel;
 ['#nName','#nUrl','#nCat'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addChannel()}}));
 $('#apikey').addEventListener('change',e=>SV('zap_key',e.target.value.trim()));
@@ -419,9 +493,9 @@ function togglePlay(){if(!ready)return;player.getPlayerState()===1?player.pauseV
 function toggleMute(){if(!ready)return;muted=!muted;muted?player.mute():player.unMute();$('#bMute').textContent=muted?'🔇':'🔊'}
 function toggleFull(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}
 
-function showUI(){$('#bar').classList.remove('hide');clearTimeout(uiT);uiT=setTimeout(()=>{if(!$('#guide').classList.contains('on')&&!$('#hist').classList.contains('on'))$('#bar').classList.add('hide')},3500)}
+function showUI(){$('#bar').classList.remove('hide');clearTimeout(uiT);uiT=setTimeout(()=>{if(!$('#guide').classList.contains('on')&&!$('#hist').classList.contains('on')&&!$('#ccmenu').classList.contains('on'))$('#bar').classList.add('hide')},3500)}
 addEventListener('mousemove',showUI);addEventListener('touchstart',showUI,{passive:true});
-$('#tap').addEventListener('click',()=>{$('#guide').classList.remove('on');$('#hist').classList.remove('on');$('#bar').classList.contains('hide')?showUI():$('#bar').classList.add('hide')});
+$('#tap').addEventListener('click',()=>{$('#guide').classList.remove('on');$('#hist').classList.remove('on');$('#ccmenu').classList.remove('on');$('#bar').classList.contains('hide')?showUI():$('#bar').classList.add('hide')});
 $('#tap').addEventListener('dblclick',toggleFull);
 let wl=0;$('#tap').addEventListener('wheel',e=>{const t=Date.now();if(t-wl<500)return;wl=t;e.deltaY<0?next():prev()},{passive:true});
 let ty=null;$('#tap').addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
@@ -442,8 +516,9 @@ addEventListener('keydown',e=>{
   else if(k==='c'||k==='C')cycleCat();
   else if(k==='b'||k==='B'||k==='Backspace'){e.preventDefault();goBack()}
   else if(k==='h'||k==='H')toggleHist();
+  else if(k==='s'||k==='S')toggleCC();
   else if(k==='e'||k==='E')openEditor();
-  else if(k==='Escape'){$('#guide').classList.remove('on');$('#hist').classList.remove('on');closeEditor()}
+  else if(k==='Escape'){$('#guide').classList.remove('on');$('#hist').classList.remove('on');$('#ccmenu').classList.remove('on');closeEditor()}
   else if(/^\d$/.test(k)){
     numBuf=(numBuf+k).slice(-3);osd(numBuf);clearTimeout(numT);
     numT=setTimeout(()=>{const n=parseInt(numBuf,10);numBuf='';
