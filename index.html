@@ -133,7 +133,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <button id="bMute" title="Silencio (M)">🔊</button>
   <input type="range" id="vol" min="0" max="100" value="80">
   <button id="bFull" title="Pantalla completa (F)">⛶</button>
-  <button id="bEdit" title="Editar canales (E)">⚙ Canales</button>
+  <button id="bEdit" title="Ajustes (E)">⚙ Ajustes</button>
 </div>
 
 <aside id="guide">
@@ -163,7 +163,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 </aside>
 
 <div id="editor"><div class="box">
-  <h2>Canales</h2>
+  <h2>Ajustes</h2>
   <h3>➕ Nuevo canal</h3>
   <div class="add">
     <input type="text" id="nName" placeholder="Nombre (opcional)">
@@ -174,8 +174,6 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <p style="margin-top:8px">Acepta: <code>youtube.com/nombre</code>, <code>/@handle</code>, <code>/c/nombre</code>, <code>/user/nombre</code>, <code>/channel/UC…</code>, ID <code>UC…</code>, listas (<code>list=PL…</code>) y videos sueltos.</p>
   <div id="status"></div>
 
-  <h3>Tus canales</h3>
-  <div id="elist"></div>
 
   <label>API key de YouTube Data v3 (opcional, gratuita; mejora la resolución de nombres de canal)
     <input type="password" id="apikey" placeholder="AIza...">
@@ -187,9 +185,12 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
     <button id="eImport">Importar</button>
     <input type="file" id="file" accept="application/json" hidden>
   </div>
+
+  <h3>Tus canales</h3>
+  <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v8</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v9</span></div>
 <div id="toast"></div>
 
 <script>
@@ -200,8 +201,8 @@ const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const PRESET_CATS=['Deportes','Historia','Curiosidades','Ciencia','Documentales','Música','Noticias','Cocina','Viajes','Humor','Educación','Tecnología','Naturaleza','Cine','General'];
 const DEFAULTS=[
  {"name": "NASA", "src": "UCLA_DiR1FfKNvjuUpBHmylQ", "list": "UULA_DiR1FfKNvjuUpBHmylQ", "cat": "Ciencia"},
- {"name": "Kurzgesagt", "src": "UCsXVk37bltHxD1rDPwtNM8Q", "list": "UUsXVk37bltHxD1rDPwtNM8Q", "cat": "Curiosidades"},
- {"name": "TED", "src": "UCAuUUnT6oDeKwE6v1NGQxug", "list": "UUAuUUnT6oDeKwE6v1NGQxug", "cat": "Educación"},
+ {"name": "Kurzgesagt", "src": "UCsXVk37bltHxD1rDPwtNM8Q", "list": "UUsXVk37bltHxD1rDPwtNM8Q", "cat": "General"},
+ {"name": "TED", "src": "UCAuUUnT6oDeKwE6v1NGQxug", "list": "UUAuUUnT6oDeKwE6v1NGQxug", "cat": "General"},
  {"name": "Veritasium", "src": "UCHnyfMqiRRG1u-2MsSQLbXA", "list": "UUHnyfMqiRRG1u-2MsSQLbXA", "cat": "Ciencia"},
  {"name": "Outdoor Boys", "src": "https://www.youtube.com/outdoorboys", "list": "UUfpCQ89W9wjkHc8J_6eTbBg", "cat": "Naturaleza"},
  {"name": "DW Documental", "src": "https://www.youtube.com/@DWDocumental", "list": "UUQ1GpKa15ulyoQuxz7H4rng", "cat": "Documentales"},
@@ -225,10 +226,20 @@ const DEFAULTS=[
  {"name": "The Great War", "src": "https://www.youtube.com/@TheGreatWar", "list": "UUUcyEsEjhPEDf69RRVhRh4A", "cat": "Historia"},
  {"name": "Trigger HappyTV", "src": "https://www.youtube.com/@mattd28", "list": "UU1Xq76meftqa5RNsEDtvxVg", "cat": "Humor"},
  {"name": "Whose Line Is It Anyway?", "src": "https://www.youtube.com/@WhoseLineIsItAnyway", "list": "UUKg_ZFByYTINckLG76cjUEg", "cat": "Humor"},
- {"name": "GELATINA", "src": "https://www.youtube.com/@SomosGelatina", "list": "UUWSfXECGo1qK_H7SXRaUSMg", "cat": "General"}
+ {"name": "GELATINA", "src": "https://www.youtube.com/@SomosGelatina", "list": "UUWSfXECGo1qK_H7SXRaUSMg", "cat": "General"},
+ {"name": "Saturday Night Live", "src": "https://www.youtube.com/@SaturdayNightLive", "list": "UUqFzWxSCi39LnW1JKFR3efg", "cat": "Humor"},
+ {"name": "Esto es ¡FA!", "src": "https://www.youtube.com/@estoesfa", "list": "UUhJncJRqo10N4C5_sPKYskA", "cat": "Música"},
+ {"name": "Felipe Pigna", "src": "https://www.youtube.com/@FelipePignaHistoria", "list": "UU5JyAlHfdfHusXdxek9eXgQ", "cat": "Historia"},
+ {"name": "HISPA", "src": "https://www.youtube.com/@hispaok", "list": "UUMecJG9i_HHfhW_MK6hX92Q", "cat": "General"}
 ];
+const DEFAULTS_VER=2;
 let channels=LS('zap_channels',DEFAULTS).map(c=>({...c,cat:c.cat||'General'}));
 let cur=LS('zap_cur',0), vol=LS('zap_vol',80), filter=LS('zap_filter',''), muted=false;
+if(LS('zap_defv',0)<DEFAULTS_VER){
+  const have=new Set(channels.map(c=>c.list||c.vid));
+  DEFAULTS.forEach(d=>{if(!have.has(d.list))channels.push({...d})});
+  SV('zap_channels',channels);SV('zap_defv',DEFAULTS_VER);
+}
 if(cur>=channels.length)cur=0;
 let player=null, ready=false, powered=false, seekPending=false, errStreak=0, lastIdx=0, numBuf='';
 let osdT,uiT,numT;
@@ -584,7 +595,7 @@ setShorts(noShorts);
 /* ---------- Guía ---------- */
 function renderGuide(){
   const html=channels.map((c,i)=>(!filter||c.cat===filter)?`<div class="ch ${i===cur?'cur':''}" data-i="${i}"><b>${String(i+1).padStart(2,'0')}</b><span>${esc(c.name)}</span><i>${esc(c.cat)}</i></div>`:'').join('');
-  $('#list').innerHTML=html||'<div class="ch">Sin canales. Abre ⚙ Canales.</div>';
+  $('#list').innerHTML=html||'<div class="ch">Sin canales. Abre ⚙ Ajustes.</div>';
 }
 $('#list').addEventListener('click',e=>{const el=e.target.closest('.ch');if(el&&el.dataset.i!=null){tune(+el.dataset.i);$('#guide').classList.remove('on')}});
 const toggleGuide=()=>$('#guide').classList.toggle('on');
@@ -775,6 +786,7 @@ addEventListener('keydown',e=>{
 });
 
 $('#power').onclick=()=>{
+  if(channels.length){const pl=pool();cur=pl[Math.floor(Math.random()*pl.length)]}
   powered=true;$('#power').style.display='none';showUI();
   if(ready){tune(cur)}
 };
