@@ -10,8 +10,17 @@ android {
         applicationId 'ar.zaptv.app'
         minSdk 21
         targetSdk 34
-        versionCode 2
-        versionName '1.1'
+        versionCode (project.findProperty('verCode') ?: '3').toInteger()
+        versionName '1.2'
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file('../zaptv.keystore')
+            storePassword 'zaptv123'
+            keyAlias 'zaptv'
+            keyPassword 'zaptv123'
+        }
     }
 
     buildTypes {

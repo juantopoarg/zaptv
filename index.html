@@ -19,6 +19,12 @@ html,body{height:100%;background:#000;color:#e8ffe8;font-family:system-ui,Segoe 
 #osdk{display:block;font-size:clamp(12px,1.6vw,18px);color:#5dff7a;letter-spacing:.08em;text-transform:uppercase}
 #osdt{display:block;font-size:clamp(12px,1.5vw,18px);opacity:.8;max-width:50vw;margin-left:auto}
 #bar{position:fixed;left:0;right:0;bottom:0;z-index:9;display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.85));transition:opacity .3s,transform .3s}
+#bar{gap:10px}
+.grp{display:flex;gap:2px;align-items:center;background:rgba(14,26,18,.88);border:1px solid #2f4a36;border-radius:12px;padding:3px}
+.grp button,.grp select{background:transparent;border:0;padding:8px 11px;font-size:15px}
+.grp button:hover,.grp select:hover{background:#27402e}
+.grp button.pri{background:#2e7d45}
+#chNum{font:700 16px ui-monospace,Consolas,monospace;color:#5dff7a;min-width:30px;text-align:center}
 #bar.hide{opacity:0;transform:translateY(20px);pointer-events:none}
 button,select{background:#1b2a1f;color:#e8ffe8;border:1px solid #2f4a36;border-radius:8px;padding:9px 14px;font-size:15px;cursor:pointer}
 button:hover{background:#27402e}
@@ -27,9 +33,6 @@ button.sm{padding:6px 10px;font-size:13px}
 input[type=range]{accent-color:#5dff7a;width:90px}
 #guide{position:fixed;top:0;left:0;bottom:0;width:min(380px,92vw);z-index:10;background:rgba(8,16,10,.96);border-right:1px solid #2f4a36;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column}
 #guide.on{transform:none}
-#hist{position:fixed;top:0;right:0;bottom:0;width:min(380px,92vw);z-index:10;background:rgba(8,16,10,.96);border-left:1px solid #2f4a36;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column}
-#hist.on{transform:none}
-#hist h2{padding:16px;font-size:18px;border-bottom:1px solid #2f4a36;display:flex;justify-content:space-between;align-items:center}
 #hlist{overflow:auto;flex:1}
 .hi{padding:10px 16px;cursor:pointer;border-bottom:1px solid #14221a;display:flex;gap:12px;align-items:center}
 .hi:hover{background:#17281c}
@@ -118,22 +121,29 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 <div id="osd"><span id="osdn"></span><span id="osdc"></span><span id="osdk"></span><span id="osdt"></span></div>
 
 <div id="bar">
-  <button id="bGuide" title="Guía con programación (G)">▦ Guía</button>
-  <button id="bList" title="Lista de canales (L)">☰ Lista</button>
-  <button id="bBack" title="Volver al programa anterior (B)">↩ Volver</button>
-  <button id="bHist" title="Historial (H)">🕘</button>
-  <button id="bCC" title="Idioma y subtítulos (S)">CC</button>
-  <select id="catSel" title="Categoría (C)"></select>
-  <button id="bPrev" title="Canal anterior (↓)">◀ CH</button>
-  <button id="bNext" title="Canal siguiente (↑)">CH ▶</button>
-  <button id="bRand" class="pri" title="Canal al azar (R)">🎲 Zap</button>
-  <button id="bVPrev" title="Video anterior (←)">⏮</button>
-  <button id="bPlay" title="Pausa/Play (Espacio)">⏯</button>
-  <button id="bVNext" title="Video siguiente (→)">⏭</button>
-  <button id="bMute" title="Silencio (M)">🔊</button>
-  <input type="range" id="vol" min="0" max="100" value="80">
-  <button id="bFull" title="Pantalla completa (F)">⛶</button>
-  <button id="bEdit" title="Ajustes (E)">⚙ Ajustes</button>
+  <div class="grp">
+    <button id="bGuide" title="Guía con programación (G)">▦ Guía</button>
+    <select id="catSel" title="Categoría (C)"></select>
+  </div>
+  <div class="grp">
+    <button id="bPrev" title="Canal anterior (↓)">◀</button>
+    <span id="chNum" title="Canal actual">--</span>
+    <button id="bNext" title="Canal siguiente (↑)">▶</button>
+    <button id="bRand" class="pri" title="Canal al azar (R)">🎲</button>
+  </div>
+  <div class="grp">
+    <button id="bPlay" title="Pausa / Play (Espacio)">⏯</button>
+    <button id="bVNext" title="Siguiente video (→)">⏭</button>
+  </div>
+  <div class="grp">
+    <button id="bMute" title="Silencio (M)">🔊</button>
+    <input type="range" id="vol" min="0" max="100" value="80">
+  </div>
+  <div class="grp">
+    <button id="bCC" title="Idioma y subtítulos (S)">CC</button>
+    <button id="bFull" title="Pantalla completa (F)">⛶</button>
+    <button id="bEdit" title="Ajustes (E)">⚙ Ajustes</button>
+  </div>
 </div>
 
 <aside id="guide">
@@ -157,10 +167,6 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 
 <div id="ccmenu"></div>
 
-<aside id="hist">
-  <h2>Últimos 10 programas <button id="hClose">✕</button></h2>
-  <div id="hlist"></div>
-</aside>
 
 <div id="editor"><div class="box">
   <h2>Ajustes</h2>
@@ -186,11 +192,15 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
     <input type="file" id="file" accept="application/json" hidden>
   </div>
 
+  <h3 id="histSec">🕘 Historial (últimos 10 programas)</h3>
+  <div class="row" style="margin:0 0 6px"><button id="hBack" title="Tecla B">↩ Volver al programa anterior</button></div>
+  <div id="hlist"></div>
+
   <h3>Tus canales</h3>
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v9</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía</p><span id="ver">v10</span></div>
 <div id="toast"></div>
 
 <script>
@@ -381,9 +391,9 @@ function goBack(){
   const t=hist[i+1];if(!t){toast('No hay programa anterior en el historial.');return}
   playHist(i+1);
 }
-const toggleHist=()=>{renderHist();$('#hist').classList.toggle('on')};
-$('#hlist').addEventListener('click',e=>{const el=e.target.closest('.hi');if(el&&el.dataset.i!=null){playHist(+el.dataset.i);$('#hist').classList.remove('on')}});
-$('#hClose').onclick=toggleHist;$('#bHist').onclick=toggleHist;$('#bBack').onclick=goBack;
+const toggleHist=()=>{openEditor();setTimeout(()=>{const h=$('#histSec');if(h)h.scrollIntoView({block:'start'})},60)};
+$('#hlist').addEventListener('click',e=>{const el=e.target.closest('.hi');if(el&&el.dataset.i!=null){playHist(+el.dataset.i);closeEditor()}});
+$('#hBack').onclick=()=>{closeEditor();goBack()};
 
 /* ---------- Idioma y subtítulos ---------- */
 const CC_LANGS=[['','Desactivados'],['es','Español'],['en','English'],['pt','Português'],['fr','Français'],['de','Deutsch'],['it','Italiano'],['ja','日本語'],['ko','한국어'],['zh-Hans','中文']];
@@ -547,7 +557,7 @@ function toggleGrid(){
   gridOpen=!gridOpen;
   document.body.classList.toggle('gridopen',gridOpen);$('#grid').classList.toggle('on',gridOpen);
   if(gridOpen){
-    $('#guide').classList.remove('on');$('#hist').classList.remove('on');
+    $('#guide').classList.remove('on');
     gSel={ci:cur,t:Date.now()};renderGrid();
     const sc=$('#gScroll');sc.scrollLeft=Math.max(0,(Date.now()-gStart)/60000*PPM-40);
     const cr=document.querySelector('.grow.cur');if(cr)cr.scrollIntoView({block:'nearest'});
@@ -594,6 +604,7 @@ $('#noShorts').onchange=e=>setShorts(e.target.checked);
 setShorts(noShorts);
 /* ---------- Guía ---------- */
 function renderGuide(){
+  $('#chNum').textContent=channels.length?String(cur+1).padStart(2,'0'):'--';
   const html=channels.map((c,i)=>(!filter||c.cat===filter)?`<div class="ch ${i===cur?'cur':''}" data-i="${i}"><b>${String(i+1).padStart(2,'0')}</b><span>${esc(c.name)}</span><i>${esc(c.cat)}</i></div>`:'').join('');
   $('#list').innerHTML=html||'<div class="ch">Sin canales. Abre ⚙ Ajustes.</div>';
 }
@@ -655,7 +666,7 @@ async function parseSource(src,key){
 /* ---------- Editor ---------- */
 function openEditor(){
   $('#apikey').value=LS('zap_key','');$('#status').textContent='';
-  renderEditor();$('#editor').classList.add('on');setTimeout(()=>$('#nUrl').focus(),50);
+  renderEditor();renderHist();$('#editor').classList.add('on');setTimeout(()=>$('#nUrl').focus(),50);
 }
 function closeEditor(){$('#editor').classList.remove('on');if(gridOpen)renderGrid();if(channels.length&&powered&&!channels[cur])tune(0)}
 function catSelect(val,cls){
@@ -738,9 +749,9 @@ $('#file').onchange=async e=>{
 };
 
 /* ---------- Controles ---------- */
-$('#gClose').onclick=toggleGuide;$('#bGuide').onclick=toggleGrid;$('#bList').onclick=toggleGuide;
+$('#gClose').onclick=toggleGuide;$('#bGuide').onclick=toggleGrid;
 $('#bNext').onclick=next;$('#bPrev').onclick=prev;$('#bRand').onclick=rand;
-$('#bVNext').onclick=vNext;$('#bVPrev').onclick=vPrev;
+$('#bVNext').onclick=vNext;
 $('#bPlay').onclick=togglePlay;$('#bMute').onclick=toggleMute;$('#bFull').onclick=toggleFull;$('#bEdit').onclick=openEditor;
 $('#vol').value=vol;
 $('#vol').oninput=e=>{vol=+e.target.value;SV('zap_vol',vol);if(ready){player.setVolume(vol);if(vol>0&&muted){muted=false;player.unMute()}}};
@@ -748,9 +759,9 @@ function togglePlay(){if(!ready)return;player.getPlayerState()===1?player.pauseV
 function toggleMute(){if(!ready)return;muted=!muted;muted?player.mute():player.unMute();$('#bMute').textContent=muted?'🔇':'🔊'}
 function toggleFull(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}
 
-function showUI(){$('#bar').classList.remove('hide');clearTimeout(uiT);uiT=setTimeout(()=>{if(!$('#guide').classList.contains('on')&&!$('#hist').classList.contains('on')&&!$('#ccmenu').classList.contains('on'))$('#bar').classList.add('hide')},3500)}
+function showUI(){$('#bar').classList.remove('hide');clearTimeout(uiT);uiT=setTimeout(()=>{if(!$('#guide').classList.contains('on')&&!$('#ccmenu').classList.contains('on'))$('#bar').classList.add('hide')},3500)}
 addEventListener('mousemove',showUI);addEventListener('touchstart',showUI,{passive:true});
-$('#tap').addEventListener('click',()=>{$('#guide').classList.remove('on');$('#hist').classList.remove('on');$('#ccmenu').classList.remove('on');$('#bar').classList.contains('hide')?showUI():$('#bar').classList.add('hide')});
+$('#tap').addEventListener('click',()=>{$('#guide').classList.remove('on');$('#ccmenu').classList.remove('on');$('#bar').classList.contains('hide')?showUI():$('#bar').classList.add('hide')});
 $('#tap').addEventListener('dblclick',toggleFull);
 let wl=0;$('#tap').addEventListener('wheel',e=>{const t=Date.now();if(t-wl<500)return;wl=t;e.deltaY<0?next():prev()},{passive:true});
 let ty=null;$('#tap').addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
@@ -777,7 +788,7 @@ addEventListener('keydown',e=>{
   else if(k==='h'||k==='H')toggleHist();
   else if(k==='s'||k==='S')toggleCC();
   else if(k==='e'||k==='E')openEditor();
-  else if(k==='Escape'){$('#guide').classList.remove('on');$('#hist').classList.remove('on');$('#ccmenu').classList.remove('on');closeEditor()}
+  else if(k==='Escape'){$('#guide').classList.remove('on');$('#ccmenu').classList.remove('on');closeEditor()}
   else if(/^\d$/.test(k)){
     numBuf=(numBuf+k).slice(-3);osd(numBuf);clearTimeout(numT);
     numT=setTimeout(()=>{const n=parseInt(numBuf,10);numBuf='';

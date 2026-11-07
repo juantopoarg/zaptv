@@ -156,7 +156,7 @@ public class MainActivity extends Activity {
             return;
         }
         String js = "(function(){var d=document;return (d.body.classList.contains('gridopen')"
-                + "||d.querySelector('#guide.on,#hist.on,#editor.on,#ccmenu.on'))?1:0})()";
+                + "||d.querySelector('#guide.on,#editor.on,#ccmenu.on'))?1:0})()";
         web.evaluateJavascript(js, value -> {
             if ("1".equals(value)) {
                 web.evaluateJavascript(

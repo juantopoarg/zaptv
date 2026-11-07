@@ -27,7 +27,7 @@ jobs:
           gradle-version: '8.9'
 
       - name: Build debug APK
-        run: gradle -p android assembleDebug --no-daemon
+        run: gradle -p android assembleDebug --no-daemon -PverCode=${{ github.run_number }}
 
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk ZapTV.apk
