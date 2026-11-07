@@ -189,7 +189,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   </div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v7</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v8</span></div>
 <div id="toast"></div>
 
 <script>
@@ -748,7 +748,7 @@ $('#tap').addEventListener('touchend',e=>{if(ty==null)return;const d=e.changedTo
 addEventListener('keydown',e=>{
   if(!powered){if(['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();$('#power').click()}return}
   if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){if(e.key==='Escape'){document.activeElement.blur();closeEditor()}return}
-  if($('#editor').classList.contains('on'))return;
+  if($('#editor').classList.contains('on')){if(e.key==='Escape')closeEditor();return}
   if(gridOpen&&gridKey(e))return;
   const k=e.key;
   if(k==='ArrowUp'||k==='PageUp'){e.preventDefault();next()}
