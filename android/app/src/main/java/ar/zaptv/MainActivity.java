@@ -1,6 +1,9 @@
 package ar.zaptv;
 
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
+import android.webkit.RenderProcessGoneDetail;
 import android.net.Uri;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -59,23 +62,42 @@ public class MainActivity extends Activity {
         }
     }
 
+    private static final long STALE_MS = 3 * 60 * 1000L;
+
     private WebView web;
     private FrameLayout root;
     private View customView;
     private WebChromeClient.CustomViewCallback customCb;
+    private final Handler ui = new Handler(Looper.getMainLooper());
+    private long stoppedAt = 0;
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
+        setContentView(root);
+        hideSystemUi();
+        buildWebView();
+        web.loadUrl(URL);
+    }
+
+    /** Crea (o recrea) el WebView desde cero. */
+    private void buildWebView() {
+        if (customView != null) {
+            root.removeView(customView);
+            customView = null;
+            if (customCb != null) { try { customCb.onCustomViewHidden(); } catch (Exception ignored) {} }
+        }
+        if (web != null) {
+            root.removeView(web);
+            try { web.destroy(); } catch (Exception ignored) {}
+        }
         web = new WebView(this);
         web.setBackgroundColor(Color.BLACK);
         root.addView(web, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        setContentView(root);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -95,6 +117,14 @@ public class MainActivity extends Activity {
                             new HashMap<String, String>(), new ByteArrayInputStream(new byte[0]));
                 }
                 return super.shouldInterceptRequest(v, r);
+            }
+
+            // El sistema mató el proceso del WebView (pasa tras mucho tiempo en segundo plano):
+            // sin esto la pantalla queda negra para siempre.
+            @Override
+            public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail d) {
+                ui.post(() -> { buildWebView(); web.loadUrl(URL); });
+                return true;
             }
         });
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
@@ -128,9 +158,6 @@ public class MainActivity extends Activity {
                 web.setVisibility(View.VISIBLE);
             }
         });
-
-        hideSystemUi();
-        web.loadUrl(URL);
     }
 
     private void hideSystemUi() {
@@ -155,9 +182,13 @@ public class MainActivity extends Activity {
             web.getWebChromeClient().onHideCustomView();
             return;
         }
+        final boolean[] answered = {false};
+        // Si la página no responde, Atrás igualmente sale de la app.
+        ui.postDelayed(() -> { if (!answered[0]) finish(); }, 800);
         String js = "(function(){var d=document;return (d.body.classList.contains('gridopen')"
                 + "||d.querySelector('#guide.on,#editor.on,#ccmenu.on'))?1:0})()";
         web.evaluateJavascript(js, value -> {
+            answered[0] = true;
             if ("1".equals(value)) {
                 web.evaluateJavascript(
                         "document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))", null);
@@ -165,6 +196,12 @@ public class MainActivity extends Activity {
                 finish();
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stoppedAt = System.currentTimeMillis();
     }
 
     @Override
@@ -176,13 +213,30 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        hideSystemUi();
         web.onResume();
+        long away = stoppedAt == 0 ? 0 : System.currentTimeMillis() - stoppedAt;
+        stoppedAt = 0;
+        if (away > STALE_MS) {
+            // Mucho tiempo en segundo plano: arranque limpio (canal al azar nuevo).
+            buildWebView();
+            web.loadUrl(URL);
+            return;
+        }
+        // Prueba de vida: si la página no responde en 2 s, se recrea el WebView.
+        final WebView probe = web;
+        final boolean[] alive = {false};
+        probe.evaluateJavascript("1", v -> alive[0] = true);
+        ui.postDelayed(() -> {
+            if (!alive[0] && probe == web && !isFinishing()) { buildWebView(); web.loadUrl(URL); }
+        }, 2000);
     }
 
     @Override
     protected void onDestroy() {
+        ui.removeCallbacksAndMessages(null);
         root.removeAllViews();
-        web.destroy();
+        if (web != null) web.destroy();
         super.onDestroy();
     }
 }

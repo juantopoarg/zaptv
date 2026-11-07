@@ -200,7 +200,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía</p><span id="ver">v10</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía</p><span id="ver">v11</span></div>
 <div id="toast"></div>
 
 <script>
@@ -801,6 +801,13 @@ $('#power').onclick=()=>{
   powered=true;$('#power').style.display='none';showUI();
   if(ready){tune(cur)}
 };
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden||!powered||!ready)return;
+  try{
+    const st=player.getPlayerState();
+    if(st===2||st===-1||st===5||st===0){ if(st===2)player.playVideo(); else tune(cur) }
+  }catch(_){ tune(cur) }
+});
 renderCats();renderGuide();renderHist();
 </script>
 </body>
