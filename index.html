@@ -132,6 +132,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
     <button id="bRand" class="pri" title="Canal al azar (R)">🎲</button>
   </div>
   <div class="grp">
+    <button id="bRestart" title="Ver desde el principio (I)">⏮</button>
     <button id="bPlay" title="Pausa / Play (Espacio)">⏯</button>
     <button id="bVNext" title="Siguiente video (→)">⏭</button>
   </div>
@@ -140,6 +141,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
     <input type="range" id="vol" min="0" max="100" value="80">
   </div>
   <div class="grp">
+    <button id="bCopy" title="Copiar enlace del video (U)">🔗</button>
     <button id="bCC" title="Idioma y subtítulos (S)">CC</button>
     <button id="bFull" title="Pantalla completa (F)">⛶</button>
     <button id="bEdit" title="Ajustes (E)">⚙ Ajustes</button>
@@ -200,7 +202,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía</p><span id="ver">v11</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v12</span></div>
 <div id="toast"></div>
 
 <script>
@@ -748,6 +750,34 @@ $('#file').onchange=async e=>{
   e.target.value='';
 };
 
+/* ---------- Reiniciar video / copiar enlace ---------- */
+function restartVideo(){
+  if(!ready)return;
+  try{player.seekTo(0,true);player.playVideo();osdMsg('⏮ Desde el principio')}catch(_){}
+}
+function videoUrl(){
+  try{const id=player.getVideoData().video_id;if(id)return'https://www.youtube.com/watch?v='+id}catch(_){}
+  return'';
+}
+function copyText(t){
+  if(navigator.clipboard&&window.isSecureContext){return navigator.clipboard.writeText(t).then(()=>true).catch(()=>fallbackCopy(t))}
+  return Promise.resolve(fallbackCopy(t));
+}
+function fallbackCopy(t){
+  try{
+    const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(a);a.select();a.setSelectionRange(0,t.length);
+    const ok=document.execCommand('copy');a.remove();return ok;
+  }catch(_){return false}
+}
+async function copyVideoUrl(){
+  const u=videoUrl();if(!u){osdMsg('No hay video para copiar');return}
+  const ok=await copyText(u);
+  osdMsg(ok?'🔗 Enlace copiado':u);
+  if(!ok)toast('No se pudo copiar automáticamente. Enlace: '+u);
+}
+$('#bRestart').onclick=restartVideo;$('#bCopy').onclick=copyVideoUrl;
+
 /* ---------- Controles ---------- */
 $('#gClose').onclick=toggleGuide;$('#bGuide').onclick=toggleGrid;
 $('#bNext').onclick=next;$('#bPrev').onclick=prev;$('#bRand').onclick=rand;
@@ -787,6 +817,8 @@ addEventListener('keydown',e=>{
   else if(k==='b'||k==='B'||k==='Backspace'){e.preventDefault();goBack()}
   else if(k==='h'||k==='H')toggleHist();
   else if(k==='s'||k==='S')toggleCC();
+  else if(k==='i'||k==='I'||k==='Home')restartVideo();
+  else if(k==='u'||k==='U')copyVideoUrl();
   else if(k==='e'||k==='E')openEditor();
   else if(k==='Escape'){$('#guide').classList.remove('on');$('#ccmenu').classList.remove('on');closeEditor()}
   else if(/^\d$/.test(k)){
