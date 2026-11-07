@@ -27,7 +27,12 @@ jobs:
           gradle-version: '8.9'
 
       - name: Build debug APK
-        run: gradle -p android assembleDebug --no-daemon -PverCode=${{ github.run_number }}
+        run: |
+          set -o pipefail
+          gradle -p android assembleDebug --no-daemon --console=plain -PverCode=${{ github.run_number }} 2>&1 | tee build.log || {
+            echo "::error::$(grep -iE 'error|what went wrong|failed|exception' -A2 build.log | head -20 | tr '\n' ' ' | cut -c1-1500)"
+            exit 1
+          }
 
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk ZapTV.apk

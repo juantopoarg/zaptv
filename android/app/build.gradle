@@ -10,7 +10,7 @@ android {
         applicationId 'ar.zaptv.app'
         minSdk 21
         targetSdk 34
-        versionCode (project.findProperty('verCode') ?: '3').toInteger()
+        versionCode Integer.parseInt((project.findProperty('verCode') ?: '3').toString())
         versionName '1.2'
     }
 
