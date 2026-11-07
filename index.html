@@ -189,7 +189,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   </div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v6</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v7</span></div>
 <div id="toast"></div>
 
 <script>
@@ -746,7 +746,7 @@ let ty=null;$('#tap').addEventListener('touchstart',e=>{ty=e.touches[0].clientY}
 $('#tap').addEventListener('touchend',e=>{if(ty==null)return;const d=e.changedTouches[0].clientY-ty;ty=null;if(Math.abs(d)>70){d<0?next():prev()}},{passive:true});
 
 addEventListener('keydown',e=>{
-  if(!powered)return;
+  if(!powered){if(['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();$('#power').click()}return}
   if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){if(e.key==='Escape'){document.activeElement.blur();closeEditor()}return}
   if($('#editor').classList.contains('on'))return;
   if(gridOpen&&gridKey(e))return;
@@ -759,6 +759,7 @@ addEventListener('keydown',e=>{
   else if(k==='f'||k==='F')toggleFull();
   else if(k==='g'||k==='G')toggleGrid();
   else if(k==='l'||k==='L')toggleGuide();
+  else if(k==='Enter'||k==='ContextMenu')toggleGrid();
   else if(k==='r'||k==='R')rand();
   else if(k==='c'||k==='C')cycleCat();
   else if(k==='b'||k==='B'||k==='Backspace'){e.preventDefault();goBack()}
