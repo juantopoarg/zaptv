@@ -147,6 +147,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
     <span>▦ Guía de programación</span>
     <span style="display:flex;gap:6px">
       <button id="gLive" title="Al cambiar de canal, ver lo que estaría 'en el aire' ahora">📡 En vivo: ON</button>
+      <button id="gShorts" title="Omite videos de hasta 3 min (formato Shorts)">🚫 Shorts: OFF</button>
       <button id="gKey">⚙ API key</button>
       <button id="gHide">⌄ Ocultar (G)</button>
     </span>
@@ -179,6 +180,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <label>API key de YouTube Data v3 (opcional, gratuita; mejora la resolución de nombres de canal)
     <input type="password" id="apikey" placeholder="AIza...">
   </label>
+  <label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="noShorts" style="width:auto"> Evitar Shorts (omite videos de hasta 3 min)</label>
   <div class="row">
     <button class="pri" id="eClose">Listo</button>
     <button id="eExport">Exportar</button>
@@ -187,26 +189,50 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   </div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v5</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click para encender · ↑↓ canal · 0-9 número · R azar · C categoría · B volver · H historial · S subtítulos · G guía · L lista</p><span id="ver">v6</span></div>
 <div id="toast"></div>
 
 <script>
 const $=s=>document.querySelector(s);
 const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+(function(){const m=location.hash.match(/[#&]key=([^&]+)/);if(m){SV('zap_key',decodeURIComponent(m[1]));try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}}})();
 const PRESET_CATS=['Deportes','Historia','Curiosidades','Ciencia','Documentales','Música','Noticias','Cocina','Viajes','Humor','Educación','Tecnología','Naturaleza','Cine','General'];
 const DEFAULTS=[
- {name:'NASA',src:'UCLA_DiR1FfKNvjuUpBHmylQ',list:'UULA_DiR1FfKNvjuUpBHmylQ',cat:'Ciencia'},
- {name:'Kurzgesagt',src:'UCsXVk37bltHxD1rDPwtNM8Q',list:'UUsXVk37bltHxD1rDPwtNM8Q',cat:'Curiosidades'},
- {name:'TED',src:'UCAuUUnT6oDeKwE6v1NGQxug',list:'UUAuUUnT6oDeKwE6v1NGQxug',cat:'Educación'},
- {name:'Veritasium',src:'UCHnyfMqiRRG1u-2MsSQLbXA',list:'UUHnyfMqiRRG1u-2MsSQLbXA',cat:'Ciencia'}
+ {"name": "NASA", "src": "UCLA_DiR1FfKNvjuUpBHmylQ", "list": "UULA_DiR1FfKNvjuUpBHmylQ", "cat": "Ciencia"},
+ {"name": "Kurzgesagt", "src": "UCsXVk37bltHxD1rDPwtNM8Q", "list": "UUsXVk37bltHxD1rDPwtNM8Q", "cat": "Curiosidades"},
+ {"name": "TED", "src": "UCAuUUnT6oDeKwE6v1NGQxug", "list": "UUAuUUnT6oDeKwE6v1NGQxug", "cat": "Educación"},
+ {"name": "Veritasium", "src": "UCHnyfMqiRRG1u-2MsSQLbXA", "list": "UUHnyfMqiRRG1u-2MsSQLbXA", "cat": "Ciencia"},
+ {"name": "Outdoor Boys", "src": "https://www.youtube.com/outdoorboys", "list": "UUfpCQ89W9wjkHc8J_6eTbBg", "cat": "Naturaleza"},
+ {"name": "DW Documental", "src": "https://www.youtube.com/@DWDocumental", "list": "UUQ1GpKa15ulyoQuxz7H4rng", "cat": "Documentales"},
+ {"name": "Archivo Prisma", "src": "https://www.youtube.com/@ArchivoPrismaRTA", "list": "UU8_K7bDkWkuPaKkDTDqVyQw", "cat": "Historia"},
+ {"name": "AsapSCIENCE", "src": "https://www.youtube.com/@AsapSCIENCE", "list": "UUC552Sd-3nyi_tk2BudLUzA", "cat": "Ciencia"},
+ {"name": "AddOutdoors", "src": "https://www.youtube.com/@AddOutdoors", "list": "UUR7Yso5x7ODk5OlLfEh5UEQ", "cat": "Naturaleza"},
+ {"name": "Coffe TV", "src": "https://www.youtube.com/@CoffeTV", "list": "UUNXmVe2tY_qbmv0y6TsAKlw", "cat": "Cine"},
+ {"name": "CortoDocumentales", "src": "https://www.youtube.com/@CortoDocumentales", "list": "UU5KntT1ikV_WkXFtHHIAxmA", "cat": "Documentales"},
+ {"name": "documentales969", "src": "https://www.youtube.com/@documentales969", "list": "UUJYceJNsFv8s1EL_IfX-XSg", "cat": "Documentales"},
+ {"name": "Historia Civilis", "src": "https://www.youtube.com/@HistoriaCivilis", "list": "UUv_vLHiWVBh_FR9vbeuiY-A", "cat": "Historia"},
+ {"name": "Historias Bélicas Que Merecen Ser Contadas", "src": "https://www.youtube.com/@historiasbelicas", "list": "UUC4EcUU21Vpwm73B8DES24Q", "cat": "Historia"},
+ {"name": "HOY NO DUERMO EN CASA", "src": "https://www.youtube.com/@hoynoduermoencasaOK", "list": "UUDocd1Fz4EX3WcEdWVIOsdw", "cat": "Naturaleza"},
+ {"name": "Just For Laughs Gags", "src": "https://www.youtube.com/@gags", "list": "UUpsSadsgX_Qk9i6i_bJoUwQ", "cat": "Humor"},
+ {"name": "Huellas de Sangre", "src": "https://www.youtube.com/@HuellasdeSangre", "list": "UUw3o5ZcYoJ333X2zAHd4ibQ", "cat": "Historia"},
+ {"name": "MIKEY & WYATT", "src": "https://www.youtube.com/@mikeybrockmann", "list": "UU0Kuf_g_RvJBvybexqIeLrg", "cat": "Humor"},
+ {"name": "On Film… With Kevin McCarthy", "src": "https://www.youtube.com/@kevinmccarthyfilm", "list": "UUpYMgzYnJdW9rkEiDmUrYVw", "cat": "Cine"},
+ {"name": "Peter Capusotto y sus Videos", "src": "https://www.youtube.com/@petercapusottotv", "list": "UU33zOh8AwVFcOqlXdwjOs6w", "cat": "Humor"},
+ {"name": "Prestico", "src": "https://www.youtube.com/@Prestico", "list": "UUugd5Q3S9kwkn0B2WxtHj9w", "cat": "Humor"},
+ {"name": "RarezasSNM", "src": "https://www.youtube.com/@RarezasSNM", "list": "UU6dPtG4UbdqKCKdJecPNjQA", "cat": "Música"},
+ {"name": "Simple History", "src": "https://www.youtube.com/@Simplehistory", "list": "UU510QYlOlKNyhy_zdQxnGYw", "cat": "Historia"},
+ {"name": "The Great War", "src": "https://www.youtube.com/@TheGreatWar", "list": "UUUcyEsEjhPEDf69RRVhRh4A", "cat": "Historia"},
+ {"name": "Trigger HappyTV", "src": "https://www.youtube.com/@mattd28", "list": "UU1Xq76meftqa5RNsEDtvxVg", "cat": "Humor"},
+ {"name": "Whose Line Is It Anyway?", "src": "https://www.youtube.com/@WhoseLineIsItAnyway", "list": "UUKg_ZFByYTINckLG76cjUEg", "cat": "Humor"},
+ {"name": "GELATINA", "src": "https://www.youtube.com/@SomosGelatina", "list": "UUWSfXECGo1qK_H7SXRaUSMg", "cat": "General"}
 ];
 let channels=LS('zap_channels',DEFAULTS).map(c=>({...c,cat:c.cat||'General'}));
 let cur=LS('zap_cur',0), vol=LS('zap_vol',80), filter=LS('zap_filter',''), muted=false;
 if(cur>=channels.length)cur=0;
 let player=null, ready=false, powered=false, seekPending=false, errStreak=0, lastIdx=0, numBuf='';
 let osdT,uiT,numT;
-let liveMode=LS('zap_live',true), liveOn=false, gridOpen=false, gSel=null, gStart=0, SCH={}, SERR={};
+let noShorts=LS('zap_noshorts',false), shortSkips=0, liveMode=LS('zap_live',true), liveOn=false, gridOpen=false, gSel=null, gStart=0, SCH={}, SERR={};
 let ccPref=LS('zap_cc',{lang:''}), ccVid='', hist=LS('zap_hist',[]), curProg=null, loading=false, histPlay=false;
 const saveCh=()=>SV('zap_channels',channels);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -237,6 +263,10 @@ window.onYouTubeIframeAPIReady=()=>{
 };
 function onState(e){
   if(e.data===1){
+    if(noShorts&&!liveOn&&!(channels[cur]&&channels[cur].vid)&&shortSkips<12){
+      try{const d=player.getDuration();if(d>0&&d<=SHORT_MAX&&!histPlay){shortSkips++;seekPending=true;player.nextVideo();return}}catch(_){}
+    }
+    shortSkips=0;
     errStreak=0;hideNoise();loading=false;trackProgram();ccOnPlay();
     if(seekPending){seekPending=false;
       try{const d=player.getDuration();if(d>400)player.seekTo(Math.random()*d*0.7,true)}catch(_){}}
@@ -262,7 +292,7 @@ function tune(i){
   if(!channels.length){openEditor();return}
   cur=((i%channels.length)+channels.length)%channels.length;SV('zap_cur',cur);
   const c=channels[cur];
-  snap();loading=true;histPlay=false;liveOn=false;
+  snap();loading=true;histPlay=false;liveOn=false;shortSkips=0;
   showNoise(900);osd();renderGuide();if(gridOpen)markCur();errStreak=0;seekPending=true;
   $('#osdt').textContent='';
   if(!ready)return;
@@ -406,13 +436,18 @@ function programs(sch,a,b){
   return out;
 }
 //PURE-END
+const SHORT_MAX=180;
 const PPM=10, WIN_H=8, ROW_W=150, TRACK_W=WIN_H*60*PPM;
 const skey=c=>c.vid?('v'+c.vid):c.list;
+function rawSched(c){
+  const ch=LS('zap_sch_'+skey(c),null);
+  return(ch&&Date.now()-ch.t<432e5&&ch.v&&ch.v.length)?ch.v:null;
+}
 function schedSync(c){
-  const k=skey(c);if(SCH[k])return SCH[k];
-  const ch=LS('zap_sch_'+k,null);
-  if(ch&&Date.now()-ch.t<432e5&&ch.v&&ch.v.length){SCH[k]=ch.v;return ch.v}
-  return null;
+  const k=skey(c)+(noShorts?'!':'');if(SCH[k])return SCH[k];
+  const raw=rawSched(c);if(!raw)return null;
+  let v=raw;if(noShorts){const f=raw.filter(x=>x.dur>SHORT_MAX);if(f.length)v=f}
+  SCH[k]=v;return v;
 }
 async function loadSchedule(c){
   const k=skey(c);if(schedSync(c))return SCH[k];
@@ -432,8 +467,8 @@ async function loadSchedule(c){
     let v=(j2.items||[]).map(x=>({id:x.id,title:x.snippet.title,dur:isoDur(x.contentDetails.duration),live:x.snippet.liveBroadcastContent})).filter(x=>x.dur>=30&&x.live==='none').map(({id,title,dur})=>({id,title,dur}));
     if(!v.length)throw new Error('sin videos reproducibles');
     v=shuffleSeed(v,hash(k));
-    SCH[k]=v;SV('zap_sch_'+k,{t:Date.now(),v});delete SERR[k];
-    return v;
+    SV('zap_sch_'+k,{t:Date.now(),v});delete SERR[k];SCH={};
+    return schedSync(c);
   }catch(e){SERR[k]={t:Date.now(),m:e.message};return null}
 }
 function playLive(c,skip){
@@ -538,6 +573,14 @@ $('#gKey').onclick=openEditor;
 function liveLabel(){$('#gLive').textContent='📡 En vivo: '+(liveMode?'ON':'OFF')}
 $('#gLive').onclick=()=>{liveMode=!liveMode;SV('zap_live',liveMode);liveLabel()};
 liveLabel();
+function setShorts(v){
+  noShorts=!!v;SV('zap_noshorts',noShorts);SCH={};
+  $('#gShorts').textContent='🚫 Shorts: '+(noShorts?'ON':'OFF');$('#noShorts').checked=noShorts;
+  if(gridOpen)renderGrid();
+}
+$('#gShorts').onclick=()=>setShorts(!noShorts);
+$('#noShorts').onchange=e=>setShorts(e.target.checked);
+setShorts(noShorts);
 /* ---------- Guía ---------- */
 function renderGuide(){
   const html=channels.map((c,i)=>(!filter||c.cat===filter)?`<div class="ch ${i===cur?'cur':''}" data-i="${i}"><b>${String(i+1).padStart(2,'0')}</b><span>${esc(c.name)}</span><i>${esc(c.cat)}</i></div>`:'').join('');
