@@ -202,7 +202,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v12</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v13</span></div>
 <div id="toast"></div>
 
 <script>
@@ -797,6 +797,16 @@ let wl=0;$('#tap').addEventListener('wheel',e=>{const t=Date.now();if(t-wl<500)r
 let ty=null;$('#tap').addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
 $('#tap').addEventListener('touchend',e=>{if(ty==null)return;const d=e.changedTouches[0].clientY-ty;ty=null;if(Math.abs(d)>70){d<0?next():prev()}},{passive:true});
 
+// Navegación con mando dentro de la barra: ←/→ siempre pasan al control vecino
+// (incluido el volumen y el selector de categoría, que de otro modo "atrapan" las flechas).
+document.addEventListener('keydown',e=>{
+  if(!powered||(e.key!=='ArrowLeft'&&e.key!=='ArrowRight'))return;
+  const a=document.activeElement;if(!a||!a.closest||!a.closest('#bar'))return;
+  const f=[...document.querySelectorAll('#bar button,#bar select,#bar input')].filter(x=>x.offsetParent!==null&&!x.disabled);
+  const i=f.indexOf(a);if(i<0)return;
+  e.preventDefault();e.stopPropagation();
+  f[(i+(e.key==='ArrowRight'?1:-1)+f.length)%f.length].focus();showUI();
+},true);
 addEventListener('keydown',e=>{
   if(!powered){if(['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();$('#power').click()}return}
   if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){if(e.key==='Escape'){document.activeElement.blur();closeEditor()}return}
