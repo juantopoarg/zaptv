@@ -202,7 +202,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v13</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v14</span></div>
 <div id="toast"></div>
 
 <script>
@@ -242,14 +242,17 @@ const DEFAULTS=[
  {"name": "Saturday Night Live", "src": "https://www.youtube.com/@SaturdayNightLive", "list": "UUqFzWxSCi39LnW1JKFR3efg", "cat": "Humor"},
  {"name": "Esto es ¡FA!", "src": "https://www.youtube.com/@estoesfa", "list": "UUhJncJRqo10N4C5_sPKYskA", "cat": "Música"},
  {"name": "Felipe Pigna", "src": "https://www.youtube.com/@FelipePignaHistoria", "list": "UU5JyAlHfdfHusXdxek9eXgQ", "cat": "Historia"},
- {"name": "HISPA", "src": "https://www.youtube.com/@hispaok", "list": "UUMecJG9i_HHfhW_MK6hX92Q", "cat": "General"}
+ {"name": "HISPA", "src": "https://www.youtube.com/@hispaok", "list": "UUMecJG9i_HHfhW_MK6hX92Q", "cat": "General"},
+ {"name": "Tierra en vivo 4K (ISS)", "src": "https://www.youtube.com/watch?v=fO9e9jnhYK8", "vid": "fO9e9jnhYK8", "cat": "Ciencia"},
+ {"name": "BBC Earth Science", "src": "https://www.youtube.com/@BBCEarthScience", "list": "UUdsOTr6SmDrxuWE7sJFrkhQ", "cat": "Ciencia"},
+ {"name": "Arctic Audio", "src": "https://www.youtube.com/@arcticaudiomusicvideos", "list": "UUAUIUCsvuJ87_eUgAEJboVg", "cat": "Música"}
 ];
-const DEFAULTS_VER=2;
+const DEFAULTS_VER=3;
 let channels=LS('zap_channels',DEFAULTS).map(c=>({...c,cat:c.cat||'General'}));
 let cur=LS('zap_cur',0), vol=LS('zap_vol',80), filter=LS('zap_filter',''), muted=false;
 if(LS('zap_defv',0)<DEFAULTS_VER){
   const have=new Set(channels.map(c=>c.list||c.vid));
-  DEFAULTS.forEach(d=>{if(!have.has(d.list))channels.push({...d})});
+  DEFAULTS.forEach(d=>{if(!have.has(d.list||d.vid))channels.push({...d})});
   SV('zap_channels',channels);SV('zap_defv',DEFAULTS_VER);
 }
 if(cur>=channels.length)cur=0;
@@ -473,6 +476,7 @@ function schedSync(c){
   SCH[k]=v;return v;
 }
 async function loadSchedule(c){
+  if(c.vid)return null;
   const k=skey(c);if(schedSync(c))return SCH[k];
   const key=LS('zap_key','');if(!key)return null;
   if(SERR[k]&&Date.now()-SERR[k].t<300000)return null;
@@ -518,6 +522,7 @@ function markCur(){document.querySelectorAll('.grow').forEach(r=>r.classList.tog
 function fillRow(i){
   const c=channels[i],tr=document.querySelector('.grow[data-i="'+i+'"] .gtrack');if(!tr)return;
   const sc=schedSync(c);
+  if(c.vid){tr.innerHTML='<div class="gmsg">🔴 Video / transmisión continua — click en el canal para verlo.</div>';return}
   if(!sc){
     const e=SERR[skey(c)];
     tr.innerHTML='<div class="gmsg">'+(!LS('zap_key','')?'Agrega una API key de YouTube en ⚙ para ver la programación de este canal.':(e?'No se pudo cargar la programación: '+esc(e.m):'Cargando programación…'))+'</div>';
