@@ -202,7 +202,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v14</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v15</span></div>
 <div id="toast"></div>
 
 <script>
@@ -258,7 +258,7 @@ if(LS('zap_defv',0)<DEFAULTS_VER){
 if(cur>=channels.length)cur=0;
 let player=null, ready=false, powered=false, seekPending=false, errStreak=0, lastIdx=0, numBuf='';
 let osdT,uiT,numT;
-let noShorts=LS('zap_noshorts',false), shortSkips=0, liveMode=LS('zap_live',true), liveOn=false, gridOpen=false, gSel=null, gStart=0, SCH={}, SERR={};
+let noShorts=LS('zap_noshorts',true), shortSkips=0, liveMode=LS('zap_live',true), liveOn=false, gridOpen=false, gSel=null, gStart=0, SCH={}, SERR={};
 let ccPref=LS('zap_cc',{lang:''}), ccVid='', hist=LS('zap_hist',[]), curProg=null, loading=false, histPlay=false;
 const saveCh=()=>SV('zap_channels',channels);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -608,6 +608,7 @@ function setShorts(v){
 }
 $('#gShorts').onclick=()=>setShorts(!noShorts);
 $('#noShorts').onchange=e=>setShorts(e.target.checked);
+if(LS('zap_nsv',0)<2){noShorts=true;SV('zap_nsv',2)}  // nuevo valor por defecto: Shorts desactivados
 setShorts(noShorts);
 /* ---------- Guía ---------- */
 function renderGuide(){
