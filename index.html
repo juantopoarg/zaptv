@@ -202,7 +202,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v15</span></div>
+<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v16</span></div>
 <div id="toast"></div>
 
 <script>
@@ -259,7 +259,7 @@ if(cur>=channels.length)cur=0;
 let player=null, ready=false, powered=false, seekPending=false, errStreak=0, lastIdx=0, numBuf='';
 let osdT,uiT,numT;
 let noShorts=LS('zap_noshorts',true), shortSkips=0, liveMode=LS('zap_live',true), liveOn=false, gridOpen=false, gSel=null, gStart=0, SCH={}, SERR={};
-let ccPref=LS('zap_cc',{lang:''}), ccVid='', hist=LS('zap_hist',[]), curProg=null, loading=false, histPlay=false;
+let mismatchTry=0, ccPref=LS('zap_cc',{lang:''}), ccVid='', hist=LS('zap_hist',[]), curProg=null, loading=false, histPlay=false;
 const saveCh=()=>SV('zap_channels',channels);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
@@ -287,8 +287,30 @@ window.onYouTubeIframeAPIReady=()=>{
     onReady:()=>{ready=true;player.setVolume(vol);if(powered)tune(cur)},
     onStateChange:onState,onError:onErr}});
 };
+/* Si loadPlaylist falla o se ignora, el reproductor sigue con la playlist del canal anterior
+   (el OSD muestra un canal y suena otro). Se detecta comparando la playlist real con la del canal. */
+function playlistMismatch(){
+  const c=channels[cur];
+  if(!c||!c.list||c.vid||liveOn||histPlay)return false;
+  let l='';
+  try{const d=player.getVideoData();l=(d&&d.list)||''}catch(_){}
+  if(!l){try{l=(player.getPlaylistId&&player.getPlaylistId())||''}catch(_){}}
+  return !!l&&l!==c.list;   // sin dato de playlist: no se puede afirmar que haya desajuste
+}
+function fixPlaylist(why){
+  const c=channels[cur];
+  if(!c||!c.list||mismatchTry>=2)return false;
+  mismatchTry++;
+  let got='';try{got=player.getVideoData().list||''}catch(_){}
+  console.warn('[ZapTV] playlist no coincide ('+why+'): suena '+got+' pero el canal "'+c.name+'" es '+c.list+' — reintento '+mismatchTry+'/2');
+  loading=true;seekPending=true;showNoise(600);
+  lastIdx=Math.floor(Math.random()*25);
+  player.loadPlaylist({listType:'playlist',list:c.list,index:lastIdx});
+  return true;
+}
 function onState(e){
   if(e.data===1){
+    if(playlistMismatch()&&fixPlaylist('onState'))return;
     if(noShorts&&!liveOn&&!(channels[cur]&&channels[cur].vid)&&shortSkips<12){
       try{const d=player.getDuration();if(d>0&&d<=SHORT_MAX&&!histPlay){shortSkips++;seekPending=true;player.nextVideo();return}}catch(_){}
     }
@@ -308,6 +330,7 @@ function onErr(){
     hideNoise();toast('No se pudo reproducir la programación de "'+c.name+'". Cambia de canal.');return;
   }
   if(c&&c.list&&lastIdx>0){lastIdx=0;player.loadPlaylist({listType:'playlist',list:c.list,index:0});return}
+  if(playlistMismatch()&&fixPlaylist('onErr'))return;
   errStreak++;
   if(errStreak<4){setTimeout(()=>{try{player.nextVideo()}catch(_){}},800)}
   else{hideNoise();toast('No se pudo reproducir "'+(c?c.name:'')+'" (embebido deshabilitado o canal inválido). Cambia de canal.')}
@@ -318,7 +341,7 @@ function tune(i){
   if(!channels.length){openEditor();return}
   cur=((i%channels.length)+channels.length)%channels.length;SV('zap_cur',cur);
   const c=channels[cur];
-  snap();loading=true;histPlay=false;liveOn=false;shortSkips=0;
+  snap();loading=true;histPlay=false;liveOn=false;shortSkips=0;mismatchTry=0;
   showNoise(900);osd();renderGuide();if(gridOpen)markCur();errStreak=0;seekPending=true;
   $('#osdt').textContent='';
   if(!ready)return;
