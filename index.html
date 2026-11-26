@@ -221,7 +221,6 @@ const DEFAULTS=[
  {"name": "Archivo Prisma", "src": "https://www.youtube.com/@ArchivoPrismaRTA", "list": "UU8_K7bDkWkuPaKkDTDqVyQw", "cat": "Historia"},
  {"name": "AsapSCIENCE", "src": "https://www.youtube.com/@AsapSCIENCE", "list": "UUC552Sd-3nyi_tk2BudLUzA", "cat": "Ciencia"},
  {"name": "AddOutdoors", "src": "https://www.youtube.com/@AddOutdoors", "list": "UUR7Yso5x7ODk5OlLfEh5UEQ", "cat": "Naturaleza"},
- {"name": "Coffe TV", "src": "https://www.youtube.com/@CoffeTV", "list": "UUNXmVe2tY_qbmv0y6TsAKlw", "cat": "Cine"},
  {"name": "CortoDocumentales", "src": "https://www.youtube.com/@CortoDocumentales", "list": "UU5KntT1ikV_WkXFtHHIAxmA", "cat": "Documentales"},
  {"name": "documentales969", "src": "https://www.youtube.com/@documentales969", "list": "UUJYceJNsFv8s1EL_IfX-XSg", "cat": "Documentales"},
  {"name": "Historia Civilis", "src": "https://www.youtube.com/@HistoriaCivilis", "list": "UUv_vLHiWVBh_FR9vbeuiY-A", "cat": "Historia"},
@@ -245,14 +244,20 @@ const DEFAULTS=[
  {"name": "HISPA", "src": "https://www.youtube.com/@hispaok", "list": "UUMecJG9i_HHfhW_MK6hX92Q", "cat": "General"},
  {"name": "Tierra en vivo 4K (ISS)", "src": "https://www.youtube.com/watch?v=fO9e9jnhYK8", "vid": "fO9e9jnhYK8", "cat": "Ciencia"},
  {"name": "BBC Earth Science", "src": "https://www.youtube.com/@BBCEarthScience", "list": "UUdsOTr6SmDrxuWE7sJFrkhQ", "cat": "Ciencia"},
- {"name": "Arctic Audio", "src": "https://www.youtube.com/@arcticaudiomusicvideos", "list": "UUAUIUCsvuJ87_eUgAEJboVg", "cat": "Música"}
+ {"name": "Arctic Audio", "src": "https://www.youtube.com/@arcticaudiomusicvideos", "list": "UUAUIUCsvuJ87_eUgAEJboVg", "cat": "Música"},
+ {"name": "MMillan", "src": "https://www.youtube.com/@MMillan", "list": "UUpaYVFs6zQ538_UMxZ0hCyQ", "cat": "Naturaleza"},
+ {"name": "Memorias de Pez", "src": "https://www.youtube.com/@MemoriasDePez", "list": "UUPH3Oz99Y_jrVBCQMjQZNSg", "cat": "Historia"},
+ {"name": "Memorias de Pez (General)", "src": "https://www.youtube.com/@MemoriasDePez", "list": "UUPH3Oz99Y_jrVBCQMjQZNSg", "cat": "General"},
+ {"name": "Historias Innecesarias", "src": "https://www.youtube.com/@Historias.Innecesarias", "list": "UUoGBPBXyq28cE4g2TaB6lRQ", "cat": "General"}
 ];
-const DEFAULTS_VER=3;
+const REMOVED_DEFAULTS=["UUNXmVe2tY_qbmv0y6TsAKlw"];   // Coffe TV
+const DEFAULTS_VER=4;
 let channels=LS('zap_channels',DEFAULTS).map(c=>({...c,cat:c.cat||'General'}));
 let cur=LS('zap_cur',0), vol=LS('zap_vol',80), filter=LS('zap_filter',''), muted=false;
 if(LS('zap_defv',0)<DEFAULTS_VER){
-  const have=new Set(channels.map(c=>c.list||c.vid));
-  DEFAULTS.forEach(d=>{if(!have.has(d.list||d.vid))channels.push({...d})});
+  channels=channels.filter(c=>!REMOVED_DEFAULTS.includes(c.list));
+  const have=new Set(channels.map(c=>(c.list||c.vid)+'|'+(c.cat||'General')));
+  DEFAULTS.forEach(d=>{if(!have.has((d.list||d.vid)+'|'+(d.cat||'General')))channels.push({...d})});
   SV('zap_channels',channels);SV('zap_defv',DEFAULTS_VER);
 }
 if(cur>=channels.length)cur=0;
@@ -526,7 +531,7 @@ const PPM=10, WIN_H=8, ROW_W=150, TRACK_W=WIN_H*60*PPM;
 const skey=c=>c.vid?('v'+c.vid):c.list;
 function rawSched(c){
   const ch=LS('zap_sch_'+skey(c),null);
-  return(ch&&Date.now()-ch.t<432e5&&ch.v&&ch.v.length)?ch.v:null;
+  return(ch&&ch.e===2&&Date.now()-ch.t<432e5&&ch.v&&ch.v.length)?ch.v:null;
 }
 function schedSync(c){
   const k=skey(c)+(noShorts?'!':'');if(SCH[k])return SCH[k];
@@ -548,12 +553,12 @@ async function loadSchedule(c){
       ids=(j.items||[]).map(x=>x.contentDetails.videoId);
     }
     if(!ids.length)throw new Error('sin videos');
-    const r2=await fetch('https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id='+ids.join(',')+'&key='+encodeURIComponent(key));
+    const r2=await fetch('https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet,status&id='+ids.join(',')+'&key='+encodeURIComponent(key));
     const j2=await r2.json();if(j2.error)throw new Error(j2.error.message);
-    let v=(j2.items||[]).map(x=>({id:x.id,title:x.snippet.title,dur:isoDur(x.contentDetails.duration),live:x.snippet.liveBroadcastContent})).filter(x=>x.dur>=30&&x.live==='none').map(({id,title,dur})=>({id,title,dur}));
+    let v=(j2.items||[]).map(x=>({id:x.id,title:x.snippet.title,dur:isoDur(x.contentDetails.duration),live:x.snippet.liveBroadcastContent,emb:!x.status||x.status.embeddable!==false&&x.status.privacyStatus!=='private'})).filter(x=>x.dur>=30&&x.live==='none'&&x.emb).map(({id,title,dur})=>({id,title,dur}));
     if(!v.length)throw new Error('sin videos reproducibles');
     v=shuffleSeed(v,hash(k));
-    SV('zap_sch_'+k,{t:Date.now(),v});delete SERR[k];SCH={};
+    SV('zap_sch_'+k,{t:Date.now(),v,e:2});delete SERR[k];SCH={};
     return schedSync(c);
   }catch(e){SERR[k]={t:Date.now(),m:e.message};return null}
 }
