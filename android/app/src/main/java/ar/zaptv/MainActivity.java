@@ -50,6 +50,16 @@ public class MainActivity extends Activity {
         return false;
     }
 
+    /** En Android TV se agrega ?tv=1 para que la página pida video en alta calidad. */
+    private String url() {
+        try {
+            android.app.UiModeManager um = (android.app.UiModeManager) getSystemService(UI_MODE_SERVICE);
+            if (um != null && um.getCurrentModeType() == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION)
+                return URL + "?tv=1";
+        } catch (Exception ignored) {}
+        return URL;
+    }
+
     private String readAsset(String name) {
         try (InputStream in = getAssets().open(name)) {
             ByteArrayOutputStream o = new ByteArrayOutputStream();
@@ -80,7 +90,7 @@ public class MainActivity extends Activity {
         setContentView(root);
         hideSystemUi();
         buildWebView();
-        web.loadUrl(URL);
+        web.loadUrl(url());
     }
 
     /** Crea (o recrea) el WebView desde cero. */
@@ -99,6 +109,8 @@ public class MainActivity extends Activity {
         root.addView(web, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
+        // Android TV dibuja un recuadro naranja de foco sobre el WebView/iframe
+        if (android.os.Build.VERSION.SDK_INT >= 26) web.setDefaultFocusHighlightEnabled(false);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -123,7 +135,7 @@ public class MainActivity extends Activity {
             // sin esto la pantalla queda negra para siempre.
             @Override
             public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail d) {
-                ui.post(() -> { buildWebView(); web.loadUrl(URL); });
+                ui.post(() -> { buildWebView(); web.loadUrl(url()); });
                 return true;
             }
         });
@@ -220,7 +232,7 @@ public class MainActivity extends Activity {
         if (away > STALE_MS) {
             // Mucho tiempo en segundo plano: arranque limpio (canal al azar nuevo).
             buildWebView();
-            web.loadUrl(URL);
+            web.loadUrl(url());
             return;
         }
         // Prueba de vida: si la página no responde en 2 s, se recrea el WebView.
@@ -228,7 +240,7 @@ public class MainActivity extends Activity {
         final boolean[] alive = {false};
         probe.evaluateJavascript("1", v -> alive[0] = true);
         ui.postDelayed(() -> {
-            if (!alive[0] && probe == web && !isFinishing()) { buildWebView(); web.loadUrl(URL); }
+            if (!alive[0] && probe == web && !isFinishing()) { buildWebView(); web.loadUrl(url()); }
         }, 2000);
     }
 

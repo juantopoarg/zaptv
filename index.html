@@ -10,6 +10,11 @@
 html,body{height:100%;background:#000;color:#e8ffe8;font-family:system-ui,Segoe UI,Roboto,sans-serif;overflow:hidden}
 #stage{position:fixed;inset:0;background:#000}
 #stage iframe,#yt{width:100%;height:100%;border:0}
+*,*:focus,#yt,iframe{outline:none!important;-webkit-tap-highlight-color:transparent}
+/* Android TV (?tv=1): el WebView mide el reproductor en px CSS (~960x540 en una TV 1080p) y YouTube elige 360p.
+   Se renderiza el iframe a >=1920 px CSS y se reduce visualmente, para que YouTube pida 1080p. */
+.tv #stage{overflow:hidden}
+.tv #stage iframe,.tv #yt{position:absolute;left:0;top:0;width:calc(100%*var(--k,1));height:calc(100%*var(--k,1));transform:scale(calc(1/var(--k,1)));transform-origin:0 0}
 #tap{position:fixed;inset:0;z-index:5}
 #noise{position:fixed;inset:0;width:100%;height:100%;z-index:6;pointer-events:none;display:none}
 #osd{position:fixed;top:4vh;right:4vw;z-index:8;text-align:right;pointer-events:none;opacity:0;transition:opacity .25s;text-shadow:0 0 8px #000,0 2px 2px #000}
@@ -284,6 +289,8 @@ $('#catSel').onchange=e=>setFilter(e.target.value);
 $('#chips').addEventListener('click',e=>{const el=e.target.closest('.chip');if(el)setFilter(el.dataset.c)});
 
 /* ---------- YouTube API ---------- */
+const TV=/[?&]tv=1/.test(location.search);
+if(TV){document.documentElement.classList.add('tv');const tk=()=>document.documentElement.style.setProperty('--k',Math.max(1,1920/innerWidth));tk();addEventListener('resize',tk)}
 const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);
 window.onYouTubeIframeAPIReady=()=>{
   const pv={controls:0,disablekb:1,modestbranding:1,rel:0,iv_load_policy:3,playsinline:1,fs:0,autoplay:1};
@@ -347,6 +354,7 @@ function onState(e){
       try{const d=player.getDuration();if(d>0&&d<=SHORT_MAX&&!histPlay){shortSkips++;seekPending=true;player.nextVideo();return}}catch(_){}
     }
     shortSkips=0;
+    if(TV)try{player.setPlaybackQuality('hd1080')}catch(_){}
     errStreak=0;hideNoise();loading=false;trackProgram();ccOnPlay();
     if(seekPending){seekPending=false;
       try{const d=player.getDuration();if(d>400)player.seekTo(Math.random()*d*0.7,true)}catch(_){}}
