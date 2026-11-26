@@ -91,6 +91,7 @@ public class MainActivity extends Activity {
         hideSystemUi();
         buildWebView();
         web.loadUrl(url());
+        new Updater(this).check();
     }
 
     /** Crea (o recrea) el WebView desde cero. */

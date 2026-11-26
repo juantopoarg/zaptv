@@ -47,6 +47,8 @@ jobs:
         with:
           tag_name: apk-latest
           name: ZapTV APK (última versión)
-          body: Descarga ZapTV.apk e instálalo (Android / Android TV).
+          body: |
+            Descarga ZapTV.apk e instálalo (Android / Android TV).
+            verCode=${{ github.run_number }}
           files: ZapTV.apk
           make_latest: true
