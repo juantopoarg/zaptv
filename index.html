@@ -297,6 +297,32 @@ function playlistMismatch(){
   if(!l){try{l=(player.getPlaylistId&&player.getPlaylistId())||''}catch(_){}}
   return !!l&&l!==c.list;   // sin dato de playlist: no se puede afirmar que haya desajuste
 }
+/* Igual que arriba pero para videos puntuales (programación en vivo, video único, historial):
+   si el video que suena no es el pedido, se reintenta y, si no se logra, se detiene el reproductor
+   para que el OSD y la guía nunca muestren un canal distinto al que se ve. */
+let expectVid='', expectStart=null, vidTry=0, vidT=0;
+function expectLoad(id,startFn){
+  expectVid=id;expectStart=startFn||null;vidTry=0;armVerify();
+  player.loadVideoById({videoId:id,startSeconds:startFn?startFn():0});
+}
+function expectClear(){expectVid='';expectStart=null;clearTimeout(vidT)}
+function armVerify(){clearTimeout(vidT);vidT=setTimeout(verifyVid,3000)}
+function verifyVid(){
+  if(!ready||!expectVid)return;
+  let got='';try{got=(player.getVideoData()||{}).video_id||''}catch(_){}
+  if(got===expectVid)return;
+  const c=channels[cur];
+  if(vidTry<2){
+    vidTry++;
+    console.warn('[ZapTV] video no coincide: suena '+(got||'?')+' pero se esperaba '+expectVid+' ("'+(c?c.name:'')+'") — reintento '+vidTry+'/2');
+    try{player.loadVideoById({videoId:expectVid,startSeconds:expectStart?expectStart():0})}catch(_){}
+    armVerify();return;
+  }
+  if(liveOn&&c&&liveMode&&errStreak<5){errStreak++;loading=true;if(playLive(c,errStreak))return}
+  expectClear();hideNoise();loading=false;
+  try{player.stopVideo()}catch(_){}
+  toast('No se pudo reproducir "'+(c?c.name:'')+'". Cambia de canal.');
+}
 function fixPlaylist(why){
   const c=channels[cur];
   if(!c||!c.list||mismatchTry>=2)return false;
@@ -327,6 +353,7 @@ function onErr(){
   if(liveOn&&c&&liveMode){
     errStreak++;
     if(errStreak<5){loading=true;if(playLive(c,errStreak))return}
+    expectClear();try{player.stopVideo()}catch(_){}
     hideNoise();toast('No se pudo reproducir la programación de "'+c.name+'". Cambia de canal.');return;
   }
   if(c&&c.list&&lastIdx>0){lastIdx=0;player.loadPlaylist({listType:'playlist',list:c.list,index:0});return}
@@ -341,7 +368,7 @@ function tune(i){
   if(!channels.length){openEditor();return}
   cur=((i%channels.length)+channels.length)%channels.length;SV('zap_cur',cur);
   const c=channels[cur];
-  snap();loading=true;histPlay=false;liveOn=false;shortSkips=0;mismatchTry=0;
+  snap();loading=true;histPlay=false;liveOn=false;shortSkips=0;mismatchTry=0;expectClear();
   showNoise(900);osd();renderGuide();if(gridOpen)markCur();errStreak=0;seekPending=true;
   $('#osdt').textContent='';
   if(!ready)return;
@@ -350,7 +377,7 @@ function tune(i){
     if(sc&&playLive(c,0))return;
     if(!sc&&LS('zap_key',''))loadSchedule(c).catch(()=>{});
   }
-  if(c.vid)player.loadVideoById(c.vid);
+  if(c.vid)expectLoad(c.vid);
   else{lastIdx=Math.floor(Math.random()*25);player.loadPlaylist({listType:'playlist',list:c.list,index:lastIdx})}
   player.setVolume(vol);muted?player.mute():player.unMute();
 }
@@ -411,7 +438,7 @@ function playHist(i){
   snap();loading=true;histPlay=true;liveOn=false;seekPending=false;errStreak=0;
   const ci=channels.findIndex(c=>c.name===h.ch);if(ci>=0){cur=ci;SV('zap_cur',cur)}
   showNoise(700);osd();renderGuide();$('#osdt').textContent=h.title||'';
-  player.loadVideoById({videoId:h.vid,startSeconds:Math.max(0,Math.floor((h.t||0)-2))});
+  expectLoad(h.vid,()=>Math.max(0,Math.floor((h.t||0)-2)));
   player.setVolume(vol);muted?player.mute():player.unMute();
 }
 function goBack(){
@@ -525,8 +552,7 @@ function playLive(c,skip){
   const sc=schedSync(c);if(!sc)return false;
   const now=Date.now(),list=programs(sc,now+1500,now+6*36e5),p=list[skip||0];if(!p)return false;
   seekPending=false;histPlay=true;liveOn=true;
-  const off=skip?0:Math.max(0,(now-p.s)/1000);
-  player.loadVideoById({videoId:p.id,startSeconds:off});
+  expectLoad(p.id,()=>skip?0:Math.max(0,(Date.now()-p.s)/1000));
   player.setVolume(vol);muted?player.mute():player.unMute();
   return true;
 }
@@ -536,7 +562,7 @@ function playProg(ci,p){
   cur=ci;SV('zap_cur',cur);
   const now=Date.now(),airing=now>=p.s&&now<p.e;
   showNoise(700);osd();renderGuide();markCur();$('#osdt').textContent=p.title||'';
-  player.loadVideoById({videoId:p.id,startSeconds:airing?Math.max(0,(now-p.s)/1000):0});
+  expectLoad(p.id,()=>Date.now()>=p.s&&Date.now()<p.e?Math.max(0,(Date.now()-p.s)/1000):0);
   player.setVolume(vol);muted?player.mute():player.unMute();
 }
 const fmtT=ms=>new Date(ms).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false});
