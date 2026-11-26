@@ -300,7 +300,7 @@ function playlistMismatch(){
 /* Igual que arriba pero para videos puntuales (programación en vivo, video único, historial):
    si el video que suena no es el pedido, se reintenta y, si no se logra, se detiene el reproductor
    para que el OSD y la guía nunca muestren un canal distinto al que se ve. */
-let expectVid='', expectStart=null, vidTry=0, vidT=0;
+let expectVid='', expectStart=null, vidTry=0, vidT=0, tuneT=0;
 function expectLoad(id,startFn){
   expectVid=id;expectStart=startFn||null;vidTry=0;armVerify();
   player.loadVideoById({videoId:id,startSeconds:startFn?startFn():0});
@@ -329,13 +329,14 @@ function fixPlaylist(why){
   mismatchTry++;
   let got='';try{got=player.getVideoData().list||''}catch(_){}
   console.warn('[ZapTV] playlist no coincide ('+why+'): suena '+got+' pero el canal "'+c.name+'" es '+c.list+' — reintento '+mismatchTry+'/2');
-  loading=true;seekPending=true;showNoise(600);
+  loading=true;seekPending=true;showNoise(12000);
   lastIdx=Math.floor(Math.random()*25);
   player.loadPlaylist({listType:'playlist',list:c.list,index:lastIdx});
   return true;
 }
 function onState(e){
   if(e.data===1){
+    if(expectVid){let g='';try{g=(player.getVideoData()||{}).video_id||''}catch(_){}if(g&&g!==expectVid)return}   // reproduce el video anterior: ignorar, el ruido sigue
     if(playlistMismatch()&&fixPlaylist('onState'))return;
     if(noShorts&&!liveOn&&!(channels[cur]&&channels[cur].vid)&&shortSkips<12){
       try{const d=player.getDuration();if(d>0&&d<=SHORT_MAX&&!histPlay){shortSkips++;seekPending=true;player.nextVideo();return}}catch(_){}
@@ -369,9 +370,16 @@ function tune(i){
   cur=((i%channels.length)+channels.length)%channels.length;SV('zap_cur',cur);
   const c=channels[cur];
   snap();loading=true;histPlay=false;liveOn=false;shortSkips=0;mismatchTry=0;expectClear();
-  showNoise(900);osd();renderGuide();if(gridOpen)markCur();errStreak=0;seekPending=true;
+  showNoise(12000);osd();renderGuide();if(gridOpen)markCur();errStreak=0;seekPending=true;
   $('#osdt').textContent='';
   if(!ready)return;
+  /* Se corta el video anterior ya mismo y se espera 250 ms antes de cargar: así el zapping rápido
+     hace una sola carga (la del último canal) y nunca se ve/oye el video del canal anterior. */
+  try{player.stopVideo()}catch(_){}
+  clearTimeout(tuneT);tuneT=setTimeout(()=>tuneLoad(c),250);
+}
+function tuneLoad(c){
+  if(channels[cur]!==c)return;
   if(liveMode){
     const sc=schedSync(c);
     if(sc&&playLive(c,0))return;
@@ -387,8 +395,8 @@ function step(d){
 }
 const next=()=>step(1), prev=()=>step(-1);
 function rand(){const p=pool();if(p.length<2)return tune(cur);let i;do{i=p[Math.floor(Math.random()*p.length)]}while(i===cur);tune(i)}
-function vNext(){if(!ready)return;const c=channels[cur];if(c&&(c.vid||histPlay))return tune(cur);snap();loading=true;showNoise(400);seekPending=true;try{player.nextVideo()}catch(_){}}
-function vPrev(){if(!ready)return;const c=channels[cur];if(c&&(c.vid||histPlay))return tune(cur);snap();loading=true;showNoise(400);try{player.previousVideo()}catch(_){}}
+function vNext(){if(!ready)return;const c=channels[cur];if(c&&(c.vid||histPlay))return tune(cur);snap();loading=true;showNoise(5000);seekPending=true;try{player.nextVideo()}catch(_){}}
+function vPrev(){if(!ready)return;const c=channels[cur];if(c&&(c.vid||histPlay))return tune(cur);snap();loading=true;showNoise(5000);try{player.previousVideo()}catch(_){}}
 function cycleCat(){const u=['',...usedCats()];setFilter(u[(u.indexOf(filter)+1)%u.length])}
 
 /* ---------- OSD / ruido ---------- */
@@ -437,7 +445,8 @@ function playHist(i){
   const h=hist[i];if(!h||!ready)return;
   snap();loading=true;histPlay=true;liveOn=false;seekPending=false;errStreak=0;
   const ci=channels.findIndex(c=>c.name===h.ch);if(ci>=0){cur=ci;SV('zap_cur',cur)}
-  showNoise(700);osd();renderGuide();$('#osdt').textContent=h.title||'';
+  clearTimeout(tuneT);try{player.stopVideo()}catch(_){}
+  showNoise(12000);osd();renderGuide();$('#osdt').textContent=h.title||'';
   expectLoad(h.vid,()=>Math.max(0,Math.floor((h.t||0)-2)));
   player.setVolume(vol);muted?player.mute():player.unMute();
 }
@@ -561,7 +570,8 @@ function playProg(ci,p){
   snap();loading=true;histPlay=true;liveOn=true;seekPending=false;errStreak=0;
   cur=ci;SV('zap_cur',cur);
   const now=Date.now(),airing=now>=p.s&&now<p.e;
-  showNoise(700);osd();renderGuide();markCur();$('#osdt').textContent=p.title||'';
+  clearTimeout(tuneT);try{player.stopVideo()}catch(_){}
+  showNoise(12000);osd();renderGuide();markCur();$('#osdt').textContent=p.title||'';
   expectLoad(p.id,()=>Date.now()>=p.s&&Date.now()<p.e?Math.max(0,(Date.now()-p.s)/1000):0);
   player.setVolume(vol);muted?player.mute():player.unMute();
 }
