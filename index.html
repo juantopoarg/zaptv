@@ -212,7 +212,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p class="hint">Click / OK para encender</p><div class="keys"><span><b>↑↓</b>canal</span><span><b>0-9</b>número</span><span><b>R</b>azar</span><span><b>C</b>categoría</span><span><b>I</b>inicio</span><span><b>U</b>copiar enlace</span><span><b>B</b>volver</span><span><b>H</b>historial</span><span><b>S</b>subtítulos</span><span><b>G</b>guía</span></div><span id="ver">v18</span></div>
+<div id="power"><h1>ZAPTV</h1><p class="hint" id="pHint">Click / OK para encender</p><div class="keys" id="pKeys"><span><b>↑↓</b>canal</span><span><b>0-9</b>número</span><span><b>R</b>azar</span><span><b>C</b>categoría</span><span><b>I</b>inicio</span><span><b>U</b>copiar enlace</span><span><b>B</b>volver</span><span><b>H</b>historial</span><span><b>S</b>subtítulos</span><span><b>G</b>guía</span></div><span id="ver">v18</span></div>
 <div id="toast"></div>
 
 <script>
@@ -312,6 +312,17 @@ $('#catSel').onchange=e=>setFilter(e.target.value);
 $('#chips').addEventListener('click',e=>{const el=e.target.closest('.chip');if(el)setFilter(el.dataset.c)});
 
 /* ---------- YouTube API ---------- */
+/* Instrucciones de la pantalla inicial según el dispositivo (PC: teclas; TV: mando; teléfono: gestos) */
+(function(){
+  const ua=navigator.userAgent,isTV=/[?&]tv=1/.test(location.search)||(/Android/.test(ua)&&!/Mobile/.test(ua));
+  const touch=!isTV&&matchMedia('(hover:none) and (pointer:coarse)').matches;
+  const row=a=>a.map(x=>`<span><b>${x[0]}</b>${x[1]}</span>`).join('');
+  if(isTV){$('#pHint').textContent='Presiona OK para encender';
+    $('#pKeys').innerHTML=row([['▲ ▼','cambiar canal'],['◀ ▶','video anterior / siguiente'],['OK','guía de canales'],['0-9','ir a un número'],['Atrás','cerrar / salir']]);}
+  else if(touch){$('#pHint').textContent='Toca la pantalla para encender';
+    $('#pKeys').innerHTML=row([['Desliza ↕','cambiar canal'],['Un toque','mostrar controles'],['Doble toque','pantalla completa'],['Botones','🎲 azar · ▦ guía · CC subtítulos · ⚙ ajustes']]);
+    $('#pKeys').style.gridTemplateColumns='repeat(2,auto)';}
+})();
 const TV=/[?&]tv=1/.test(location.search)||(/Android/.test(navigator.userAgent)&&!/Mobile/.test(navigator.userAgent));
 if(TV){document.documentElement.classList.add('tv');const tk=()=>document.documentElement.style.setProperty('--k',Math.max(1,Math.min(3,1920/innerWidth)));tk();addEventListener('resize',tk)}
 const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);
