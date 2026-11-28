@@ -119,6 +119,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 #power .hint{font-size:clamp(16px,2.2vw,26px);color:#d8ffe0;opacity:.95}
 #power .keys{display:grid;grid-template-columns:repeat(3,auto);gap:10px 34px;justify-content:center;max-width:min(78vw,900px);margin-top:6px;font-size:clamp(13px,1.6vw,20px);opacity:.75;text-align:left;line-height:1.35}
 #power .keys b{color:#5dff7a;font-weight:700;margin-right:.4em}
+#power .keys.simple{grid-template-columns:auto;gap:12px;font-size:clamp(15px,2.2vw,26px);opacity:.85}
 #power #ver{position:absolute;bottom:2.5vh;right:3vw;opacity:.4;font-size:13px}
 #toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:40;background:#3a1d1d;border:1px solid #7a3a3a;padding:10px 16px;border-radius:8px;display:none;max-width:90vw}
 </style>
@@ -211,7 +212,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p class="hint">Click / OK para encender</p><div class="keys"><span><b>↑↓</b>canal</span><span><b>0-9</b>número</span><span><b>R</b>azar</span><span><b>C</b>categoría</span><span><b>I</b>inicio</span><span><b>U</b>copiar enlace</span><span><b>B</b>volver</span><span><b>H</b>historial</span><span><b>S</b>subtítulos</span><span><b>G</b>guía</span></div><span id="ver">v17</span></div>
+<div id="power"><h1>ZAPTV</h1><p class="hint">Click / OK para encender</p><div class="keys"><span><b>↑↓</b>canal</span><span><b>0-9</b>número</span><span><b>R</b>azar</span><span><b>C</b>categoría</span><span><b>I</b>inicio</span><span><b>U</b>copiar enlace</span><span><b>B</b>volver</span><span><b>H</b>historial</span><span><b>S</b>subtítulos</span><span><b>G</b>guía</span></div><span id="ver">v18</span></div>
 <div id="toast"></div>
 
 <script>
@@ -219,6 +220,24 @@ const $=s=>document.querySelector(s);
 const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 (function(){const m=location.hash.match(/[#&]key=([^&]+)/);if(m){SV('zap_key',decodeURIComponent(m[1]));try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}}})();
+/* Instrucciones de la pantalla inicial según el dispositivo: TV (control remoto), teléfono/tablet (táctil) o PC (teclado) */
+const TV_UA=/Android/.test(navigator.userAgent)&&!/Mobile/.test(navigator.userAgent)||/[?&]tv=1/.test(location.search);
+const TOUCH=!TV_UA&&(/Mobile|Android|iPhone|iPad/.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches);
+function powerHelp(){
+  const k=(a,b)=>`<span><b>${a}</b>${b}</span>`;
+  const rows=TV_UA?[
+    ['OK','encender / abrir guía'],['↑ ↓','cambiar de canal'],['← →','video anterior / siguiente'],
+    ['0-9','número de canal'],['Atrás','cerrar / salir']
+  ]:TOUCH?[
+    ['Tocar','mostrar / ocultar botones'],['Deslizar ↑↓','cambiar de canal'],['Doble toque','pantalla completa'],
+    ['Botones','guía, azar, categoría, historial, subtítulos']
+  ]:[
+    ['↑↓','canal'],['0-9','número'],['R','azar'],['C','categoría'],['I','inicio'],['U','copiar enlace'],['B','volver'],['H','historial'],['S','subtítulos'],['G','guía']
+  ];
+  $('#power .keys').innerHTML=rows.map(r=>k(r[0],r[1])).join('');
+  $('#power .hint').textContent=TV_UA?'Presiona OK para encender':TOUCH?'Toca la pantalla para encender':'Click / Enter para encender';
+  if(TV_UA||TOUCH)$('#power .keys').classList.add('simple');
+}
 const PRESET_CATS=['Deportes','Historia','Curiosidades','Ciencia','Documentales','Música','Noticias','Cocina','Viajes','Humor','Educación','Tecnología','Naturaleza','Cine','General'];
 const DEFAULTS=[
  {"name": "NASA", "src": "UCLA_DiR1FfKNvjuUpBHmylQ", "list": "UULA_DiR1FfKNvjuUpBHmylQ", "cat": "Ciencia"},
@@ -306,9 +325,10 @@ window.onYouTubeIframeAPIReady=()=>{
 /* Si loadPlaylist falla o se ignora, el reproductor sigue con la playlist del canal anterior
    (el OSD muestra un canal y suena otro). Se detecta comparando la playlist real con la del canal. */
 /* Pide HD al reproductor (API no documentada/obsoleta: se prueba todo, sin romper si falla) y muestra el resultado en #ver */
+powerHelp();
 function forceHD(){
   const go=()=>{try{player.setPlaybackQualityRange('hd1080','hd1080')}catch(_){}try{player.setPlaybackQuality('hd1080')}catch(_){}
-    try{$('#ver').textContent='v17 · '+player.getPlaybackQuality()+' · '+innerWidth+'px×'+getComputedStyle(document.documentElement).getPropertyValue('--k')}catch(_){}};
+    try{$('#ver').textContent='v18 · '+player.getPlaybackQuality()+' · '+innerWidth+'px×'+getComputedStyle(document.documentElement).getPropertyValue('--k')}catch(_){}};
   go();setTimeout(go,1500);setTimeout(go,5000);
 }
 function playlistMismatch(){
