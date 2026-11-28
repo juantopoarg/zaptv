@@ -116,6 +116,10 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
 #power{position:fixed;inset:0;z-index:30;background:#050805;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;cursor:pointer}
 #power h1{font:700 clamp(40px,9vw,90px) ui-monospace,Consolas,monospace;color:#5dff7a;letter-spacing:.1em}
 #power p{opacity:.7}
+#power .hint{font-size:clamp(16px,2.2vw,26px);color:#d8ffe0;opacity:.95}
+#power .keys{display:grid;grid-template-columns:repeat(3,auto);gap:10px 34px;justify-content:center;max-width:min(78vw,900px);margin-top:6px;font-size:clamp(13px,1.6vw,20px);opacity:.75;text-align:left;line-height:1.35}
+#power .keys b{color:#5dff7a;font-weight:700;margin-right:.4em}
+#power #ver{position:absolute;bottom:2.5vh;right:3vw;opacity:.4;font-size:13px}
 #toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:40;background:#3a1d1d;border:1px solid #7a3a3a;padding:10px 16px;border-radius:8px;display:none;max-width:90vw}
 </style>
 </head>
@@ -207,7 +211,7 @@ label{display:block;margin-top:12px;font-size:13px;opacity:.85}
   <div id="elist"></div>
 </div></div>
 
-<div id="power"><h1>ZAPTV</h1><p>Click / OK para encender · ↑↓ canal · 0-9 número · R azar · C categoría · I inicio · U copiar enlace · B volver · H historial · S subtítulos · G guía</p><span id="ver">v16</span></div>
+<div id="power"><h1>ZAPTV</h1><p class="hint">Click / OK para encender</p><div class="keys"><span><b>↑↓</b>canal</span><span><b>0-9</b>número</span><span><b>R</b>azar</span><span><b>C</b>categoría</span><span><b>I</b>inicio</span><span><b>U</b>copiar enlace</span><span><b>B</b>volver</span><span><b>H</b>historial</span><span><b>S</b>subtítulos</span><span><b>G</b>guía</span></div><span id="ver">v17</span></div>
 <div id="toast"></div>
 
 <script>
@@ -289,8 +293,8 @@ $('#catSel').onchange=e=>setFilter(e.target.value);
 $('#chips').addEventListener('click',e=>{const el=e.target.closest('.chip');if(el)setFilter(el.dataset.c)});
 
 /* ---------- YouTube API ---------- */
-const TV=/[?&]tv=1/.test(location.search);
-if(TV){document.documentElement.classList.add('tv');const tk=()=>document.documentElement.style.setProperty('--k',Math.max(1,1920/innerWidth));tk();addEventListener('resize',tk)}
+const TV=/[?&]tv=1/.test(location.search)||(/Android/.test(navigator.userAgent)&&!/Mobile/.test(navigator.userAgent));
+if(TV){document.documentElement.classList.add('tv');const tk=()=>document.documentElement.style.setProperty('--k',Math.max(1,Math.min(3,1920/innerWidth)));tk();addEventListener('resize',tk)}
 const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s);
 window.onYouTubeIframeAPIReady=()=>{
   const pv={controls:0,disablekb:1,modestbranding:1,rel:0,iv_load_policy:3,playsinline:1,fs:0,autoplay:1};
@@ -301,6 +305,12 @@ window.onYouTubeIframeAPIReady=()=>{
 };
 /* Si loadPlaylist falla o se ignora, el reproductor sigue con la playlist del canal anterior
    (el OSD muestra un canal y suena otro). Se detecta comparando la playlist real con la del canal. */
+/* Pide HD al reproductor (API no documentada/obsoleta: se prueba todo, sin romper si falla) y muestra el resultado en #ver */
+function forceHD(){
+  const go=()=>{try{player.setPlaybackQualityRange('hd1080','hd1080')}catch(_){}try{player.setPlaybackQuality('hd1080')}catch(_){}
+    try{$('#ver').textContent='v17 · '+player.getPlaybackQuality()+' · '+innerWidth+'px×'+getComputedStyle(document.documentElement).getPropertyValue('--k')}catch(_){}};
+  go();setTimeout(go,1500);setTimeout(go,5000);
+}
 function playlistMismatch(){
   const c=channels[cur];
   if(!c||!c.list||c.vid||liveOn||histPlay)return false;
@@ -354,7 +364,7 @@ function onState(e){
       try{const d=player.getDuration();if(d>0&&d<=SHORT_MAX&&!histPlay){shortSkips++;seekPending=true;player.nextVideo();return}}catch(_){}
     }
     shortSkips=0;
-    if(TV)try{player.setPlaybackQuality('hd1080')}catch(_){}
+    if(TV)forceHD();
     errStreak=0;hideNoise();loading=false;trackProgram();ccOnPlay();
     if(seekPending){seekPending=false;
       try{const d=player.getDuration();if(d>400)player.seekTo(Math.random()*d*0.7,true)}catch(_){}}
